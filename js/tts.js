@@ -9,16 +9,50 @@ class TTSEngine {
     this.voices = [];
     this.selectedVoice = null;
     this.mode = 'coach'; // 'coach', 'letter', 'word', 'off'
+    this.previousActiveMode = 'coach';
     this.rate = 1.1; // slightly brisk for natural typing pace
     this.pitch = 1.0;
     this.volume = 0.85;
     this.isSpeaking = false;
     this.onSpeakingChange = null; // callback for UI wave animation
+    this.onModeChange = null; // callback for UI synchronization
     this.lastSpokenKey = null;
     this.lastSpeechTime = 0;
     this.consecutiveMistakes = 0;
 
+    this.loadSettings();
     this.initVoices();
+  }
+
+  loadSettings() {
+    try {
+      const savedMode = localStorage.getItem('keyvibe_tts_mode');
+      if (savedMode && ['coach', 'letter', 'word', 'off'].includes(savedMode)) {
+        this.mode = savedMode;
+        if (savedMode !== 'off') {
+          this.previousActiveMode = savedMode;
+        }
+      }
+      const savedPrev = localStorage.getItem('keyvibe_tts_prev_mode');
+      if (savedPrev && ['coach', 'letter', 'word'].includes(savedPrev)) {
+        this.previousActiveMode = savedPrev;
+      }
+      const savedRate = localStorage.getItem('keyvibe_tts_rate');
+      if (savedRate) {
+        const r = parseFloat(savedRate);
+        if (!isNaN(r) && r >= 0.5 && r <= 2.0) this.rate = r;
+      }
+    } catch (_) { }
+  }
+
+  saveSettings() {
+    try {
+      localStorage.setItem('keyvibe_tts_mode', this.mode);
+      if (this.previousActiveMode) {
+        localStorage.setItem('keyvibe_tts_prev_mode', this.previousActiveMode);
+      }
+      localStorage.setItem('keyvibe_tts_rate', String(this.rate));
+    } catch (_) { }
   }
 
   initVoices() {
@@ -26,6 +60,15 @@ class TTSEngine {
     const loadVoices = () => {
       this.voices = this.synth.getVoices();
       if (!this.voices.length) return;
+
+      const savedVoiceName = localStorage.getItem('keyvibe_tts_voice');
+      if (savedVoiceName) {
+        const savedVoice = this.voices.find(v => v.name === savedVoiceName);
+        if (savedVoice) {
+          this.selectedVoice = savedVoice;
+          return;
+        }
+      }
 
       // Prefer high quality English voices (Natural, Google, Samantha, Jenny, Guy, etc.)
       const preferred = this.voices.find(v => 
@@ -47,19 +90,53 @@ class TTSEngine {
 
   setVoiceByName(name) {
     const v = this.voices.find(item => item.name === name);
-    if (v) this.selectedVoice = v;
+    if (v) {
+      this.selectedVoice = v;
+      try {
+        localStorage.setItem('keyvibe_tts_voice', name);
+      } catch (_) { }
+    }
   }
 
   setMode(mode) {
+    if (mode !== 'off') {
+      this.previousActiveMode = mode;
+    }
     this.mode = mode;
     if (mode === 'off' && this.synth) {
       this.synth.cancel();
       this._setSpeaking(false);
     }
+    this.saveSettings();
+    if (this.onModeChange) {
+      this.onModeChange(this.mode);
+    }
+  }
+
+  toggle() {
+    if (this.mode === 'off') {
+      this.setMode(this.previousActiveMode || 'coach');
+    } else {
+      this.setMode('off');
+    }
+    return this.mode !== 'off';
+  }
+
+  cycleMode() {
+    const modes = ['coach', 'letter', 'word', 'off'];
+    const curIdx = modes.indexOf(this.mode);
+    const nextIdx = (curIdx + 1) % modes.length;
+    this.setMode(modes[nextIdx]);
+    return this.mode;
+  }
+
+  isEnabled() {
+    return this.mode !== 'off';
   }
 
   setRate(r) {
     this.rate = parseFloat(r);
+    this.saveSettings();
   }
 
   setPitch(p) {

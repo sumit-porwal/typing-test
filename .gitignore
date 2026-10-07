@@ -53,6 +53,9 @@ pnpm-debug.log*
 depricated/3D/*.obj
 depricated/3D/*.blend
 depricated/3D/*.glb
+depricated/3D/*.glb
+depricated/3D/*
+
 depricated/screenshots/
 
 # Temporary / Scratch Files
@@ -60,3 +63,5 @@ dom_output.html
 scratch/
 .system_generated/
 .gemini/
+
+.vercel

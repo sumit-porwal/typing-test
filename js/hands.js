@@ -60,6 +60,16 @@ export class VirtualHands {
     }
   }
 
+  setTTSMode(mode) {
+    if (this.ttsWaveContainer) {
+      const isMuted = mode === 'off';
+      this.ttsWaveContainer.classList.toggle('wave-muted', isMuted);
+      this.ttsWaveContainer.title = isMuted
+        ? 'Voice Coach: Muted (Click to enable)'
+        : `Voice Coach: ${mode} (Click to mute)`;
+    }
+  }
+
   highlightTarget(fingerId, shiftFingerId, char, tip) {
     this.activeFingerId = fingerId;
     this.shiftFingerId = shiftFingerId;

@@ -12,7 +12,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
   <!-- PWA & Mobile Web -->
   <meta name="theme-color" content="#0a0e17">
   <link rel="manifest" href="manifest.json">
@@ -58,35 +60,43 @@
         <button class="mode-tab" data-mode="quotes">
           <span>💬</span> Quotes
         </button>
+        <button class="mode-tab" data-mode="zen" title="Zen Conveyor: Center-locked cursor, zero distraction, gliding text [Alt+Z]">
+          <span>☯</span> Zen
+        </button>
       </nav>
 
       <div class="header-actions">
         <button class="action-btn active" id="btn-toggle-keyboard" aria-pressed="true"
-          title="Toggle virtual keyboard visibility (Zen / Blind typing mode) [Alt+K]">
+          title="Toggle virtual keyboard visibility [Alt+K]">
           <span id="kb-toggle-icon">⌨️</span> <span id="kb-toggle-label">Keyboard</span>
         </button>
         <button class="action-btn active" id="btn-toggle-hands" aria-pressed="true"
           title="Toggle realistic hand overlay on keyboard">
-          <span>🖐️</span> Hands Overlay
+          <span>🖐️</span> <span id="hands-toggle-label">Hands</span>
         </button>
-        <button class="action-btn" id="btn-toggle-sound" aria-label="Toggle keyboard sound or switch profile"
+        <button class="action-btn active" id="btn-toggle-voice" aria-pressed="true"
+          aria-label="Toggle AI Voice Coach"
+          title="AI Voice Coach: Spoken typing feedback (Click to toggle On/Off, Shift+Click to cycle modes) [Alt+V]">
+          <span id="voice-toggle-icon">🗣️</span> <span id="voice-toggle-label">Coach</span>
+        </button>
+        <button class="action-btn active" id="btn-toggle-sound" aria-label="Toggle keyboard sound or switch profile"
           title="Keyboard Sound: Click to cycle profiles, Shift+Click to mute">
-          <span id="sound-toggle-icon">🔊</span> <span id="sound-toggle-label">Thock</span>
+          <span id="sound-toggle-icon">🔊</span> <span id="sound-toggle-label">Sound</span>
         </button>
-        <button class="action-btn" id="btn-toggle-cursor" aria-label="Toggle cursor style"
+        <button class="action-btn active" id="btn-toggle-cursor" aria-label="Toggle cursor style"
           title="Cursor Style: Click to cycle (Line, Block, Underline, Outline)">
           <span id="cursor-toggle-icon">|</span> <span id="cursor-toggle-label">Line</span>
         </button>
         <button class="action-btn" id="btn-open-custom" title="Practice your own custom text">
-          <span>✍️</span> Custom
+          <span>✍️</span> <span>Custom</span>
         </button>
         <button class="action-btn" id="btn-toggle-settings" title="Open Studio Settings (Audio, Hands, Keyboard, Cursor, Voice)">
-          <span>⚙️</span> Settings
+          <span>⚙️</span> <span>Settings</span>
         </button>
       </div>
     </header>
 
-    <!-- Subnav Strip (Levels or Word Count / Timed Modes) -->
+    <!-- Subnav Strip (Levels or Word Count / Timed Modes / Zen Options) -->
     <div class="subnav-strip">
       <div class="academy-subbar" id="academy-subbar" style="display: none;">
         <div class="academy-nav-controls">
@@ -149,10 +159,49 @@
           </select>
         </div>
       </div>
+
+      <!-- Zen Mode Subbar (Words, Time, Infinity Flow) -->
+      <div class="words-subbar zen-subbar" id="zen-subbar" style="display: none;">
+        <div class="subbar-segment">
+          <span class="subbar-segment-label">ZEN MODE</span>
+          <button class="sub-opt-btn active" data-zen-type="words" id="zen-tab-words">Words</button>
+          <button class="sub-opt-btn" data-zen-type="time" id="zen-tab-time">Time</button>
+          <button class="sub-opt-btn" data-zen-type="infinity" id="zen-tab-infinity">∞ Infinity</button>
+        </div>
+
+        <div class="subbar-divider" id="zen-sub-divider"></div>
+
+        <div class="subbar-segment" id="zen-group-words">
+          <span class="subbar-segment-label">COUNT</span>
+          <button class="sub-opt-btn" data-zen-words="10">10</button>
+          <button class="sub-opt-btn active" data-zen-words="25">25</button>
+          <button class="sub-opt-btn" data-zen-words="50">50</button>
+          <button class="sub-opt-btn" data-zen-words="100">100</button>
+        </div>
+
+        <div class="subbar-segment" id="zen-group-time" style="display: none;">
+          <span class="subbar-segment-label">TIME</span>
+          <button class="sub-opt-btn" data-zen-time="15">15s</button>
+          <button class="sub-opt-btn active" data-zen-time="30">30s</button>
+          <button class="sub-opt-btn" data-zen-time="60">60s</button>
+        </div>
+
+        <div class="subbar-segment" id="zen-group-infinity" style="display: none;">
+          <span class="zen-infinity-badge">∞ Endless Flow &bull; Press Esc to Stop</span>
+        </div>
+      </div>
     </div>
 
     <!-- Typing Stage Area (Compact height, live stats & text display) -->
     <main class="typing-stage" id="main-typing-stage">
+      <!-- Obvious Glowing Caps Lock Indicator Banner -->
+      <div class="caps-lock-hud" id="caps-lock-hud" style="display: none;" role="alert" aria-live="assertive">
+        <div class="caps-lock-pill">
+          <span class="caps-lock-icon">⇪</span>
+          <span class="caps-lock-msg">CAPS LOCK IS ON</span>
+          <span class="caps-lock-tag">Press Caps Lock to deactivate</span>
+        </div>
+      </div>
       <div class="stage-top-meta">
         <div class="mode-info-block">
           <div class="mode-title-row">
@@ -195,12 +244,6 @@
         <div class="typing-caret" id="typing-caret"></div>
         <!-- Dynamically injected characters -->
       </div>
-
-      <!-- Zen / Blind Typing Mode banner when keyboard is hidden -->
-      <div class="zen-mode-notice" id="zen-mode-notice" style="display: none;">
-        <span class="zen-icon">👁️</span>
-        <span>Blind Touch Typing Mode &bull; Virtual keyboard hidden &bull; Focus purely on the screen!</span>
-      </div>
     </main>
 
     <!-- Coach Guidance Bar (rendered by hands.js) -->
@@ -234,7 +277,8 @@
     <!-- Quick shortcuts footer hint -->
     <footer class="app-quick-shortcuts" aria-label="Keyboard Shortcuts">
       <span class="shortcut-tag"><kbd>Tab</kbd> + <kbd>Enter</kbd> restart</span>
-      <span class="shortcut-tag"><kbd>Alt</kbd> + <kbd>K</kbd> toggle kb</span>
+      <span class="shortcut-tag"><kbd>Alt</kbd> + <kbd>K</kbd> keyboard</span>
+      <span class="shortcut-tag"><kbd>Alt</kbd> + <kbd>V</kbd> coach</span>
       <span class="shortcut-tag"><kbd>Esc</kbd> settings</span>
       <span class="shortcut-tag"><kbd>Shift</kbd> + <kbd>Sound</kbd> mute</span>
       <span class="shortcut-tag" id="shortcut-mode-hint"><kbd>⚡ Words Mode</kbd> active</span>
@@ -290,14 +334,14 @@
         </div>
 
         <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label class="form-label" for="slider-sound-vol" style="margin-bottom: 0;">Audio Volume</label>
+          <div class="setting-row-between">
+            <label class="form-label" for="slider-sound-vol">Audio Volume</label>
             <span class="metric-val" id="val-sound-vol" style="font-size: 0.76rem; color: #38bdf8;">50%</span>
           </div>
           <input type="range" class="form-range" id="slider-sound-vol" min="0" max="100" value="50">
         </div>
 
-        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 0.5rem 0.65rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 0.5rem;">
+        <div class="setting-card-toggle-row">
           <div>
             <label class="form-label" style="margin-bottom: 2px;">Key Release (Upstroke)</label>
             <span style="font-size: 0.7rem; color: var(--text-dim); display: block;">Realistic slider return clack on keyup</span>
@@ -314,16 +358,16 @@
         <p class="settings-card-desc">Interactive posture coach overlaid above on-screen keyboard.</p>
 
         <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label class="form-label" for="slider-hand-opacity" style="margin-bottom: 0;">Hand Overlay Transparency</label>
+          <div class="setting-row-between">
+            <label class="form-label" for="slider-hand-opacity">Hand Overlay Transparency</label>
             <span class="metric-val" id="val-hand-opacity" style="font-size: 0.76rem; color: #38bdf8;">50%</span>
           </div>
           <input type="range" class="form-range" id="slider-hand-opacity" min="10" max="95" value="50">
         </div>
 
         <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label class="form-label" for="slider-hand-thickness" style="margin-bottom: 0;">Hand Finger Thickness</label>
+          <div class="setting-row-between">
+            <label class="form-label" for="slider-hand-thickness">Hand Finger Thickness</label>
             <span class="metric-val" id="val-hand-thickness" style="font-size: 0.76rem; color: #38bdf8;">100%</span>
           </div>
           <input type="range" class="form-range" id="slider-hand-thickness" min="70" max="140" value="100">
@@ -337,7 +381,7 @@
         </div>
         <p class="settings-card-desc">Custom chassis themes, keycap height, board width, and visibility.</p>
 
-        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 0.5rem 0.65rem; border-radius: 8px; border: 1px solid var(--border-color);">
+        <div class="setting-card-toggle-row">
           <div>
             <label class="form-label" style="margin-bottom: 2px;">Virtual Keyboard</label>
             <span style="font-size: 0.7rem; color: var(--text-dim); display: block;">Show on-screen keyboard &amp; hands</span>
@@ -384,16 +428,16 @@
         </div>
 
         <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label class="form-label" for="slider-kb-width" style="margin-bottom: 0;">Keyboard Width</label>
+          <div class="setting-row-between">
+            <label class="form-label" for="slider-kb-width">Keyboard Width</label>
             <span class="metric-val" id="val-kb-width" style="font-size: 0.76rem; color: #38bdf8;">100%</span>
           </div>
           <input type="range" class="form-range" id="slider-kb-width" min="70" max="100" value="100">
         </div>
 
         <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label class="form-label" for="slider-kb-height" style="margin-bottom: 0;">Key Cap Height</label>
+          <div class="setting-row-between">
+            <label class="form-label" for="slider-kb-height">Key Cap Height</label>
             <span class="metric-val" id="val-kb-height" style="font-size: 0.76rem; color: #38bdf8;">35px</span>
           </div>
           <input type="range" class="form-range" id="slider-kb-height" min="28" max="48" value="35">
@@ -421,9 +465,14 @@
       <section class="settings-card" data-card="tts">
         <div class="settings-card-header">
           <div class="settings-card-title"><span>🗣️</span> AI Voice Coach &amp; TTS</div>
-          <button class="action-btn" id="btn-tts-test" style="padding: 0.15rem 0.55rem; font-size: 0.72rem; min-height: unset;">
-            🗣️ Test
-          </button>
+          <div style="display: flex; gap: 0.35rem; align-items: center;">
+            <button class="action-btn active" id="btn-setting-voice-toggle" style="padding: 0.2rem 0.55rem; font-size: 0.72rem; height: 28px;" title="Toggle Voice Coach On/Off">
+              <span id="setting-voice-toggle-icon">🗣️</span> <span id="setting-voice-toggle-label">Enabled</span>
+            </button>
+            <button class="action-btn" id="btn-tts-test" style="padding: 0.2rem 0.55rem; font-size: 0.72rem; height: 28px;">
+              🗣️ Test
+            </button>
+          </div>
         </div>
         <p class="settings-card-desc">Spoken audio feedback and tactile guidance.</p>
 
@@ -445,8 +494,8 @@
         </div>
 
         <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label class="form-label" for="slider-tts-rate" style="margin-bottom: 0;">Speech Speed</label>
+          <div class="setting-row-between">
+            <label class="form-label" for="slider-tts-rate">Speech Speed</label>
             <span class="metric-val" id="val-tts-rate" style="font-size: 0.76rem; color: #38bdf8;">1.1x</span>
           </div>
           <input type="range" class="form-range" id="slider-tts-rate" min="0.8" max="1.5" step="0.05" value="1.1">
@@ -459,7 +508,7 @@
       <button class="action-btn btn-sm" id="btn-reset-settings" title="Restore all default studio settings">
         ↺ Reset Defaults
       </button>
-      <button class="btn-primary btn-sm" id="btn-done-settings" style="padding: 0.35rem 1rem;">
+      <button class="btn-primary btn-sm" id="btn-done-settings">
         Done
       </button>
     </div>

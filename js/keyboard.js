@@ -81,6 +81,15 @@ export class VirtualKeyboard {
           keyEl.appendChild(dot);
         }
 
+        if (key.code === 'CapsLock') {
+          keyEl.addEventListener('click', () => {
+            if (window.app) {
+              const isNowLocked = !keyEl.classList.contains('caps-locked');
+              window.app.setCapsLockIndicator(isNowLocked);
+            }
+          });
+        }
+
         rowEl.appendChild(keyEl);
         this.keyElements.set(key.code, keyEl);
       });
@@ -152,6 +161,13 @@ export class VirtualKeyboard {
     if (el) {
       el.classList.add('key-error');
       setTimeout(() => el.classList.remove('key-error'), 250);
+    }
+  }
+
+  setCapsLock(isLocked) {
+    const el = this.keyElements.get('CapsLock');
+    if (el) {
+      el.classList.toggle('caps-locked', !!isLocked);
     }
   }
 }
