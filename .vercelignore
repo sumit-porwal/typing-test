@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Large deprecated assets (3D models, Blender files, screenshots)
+depricated/
+
+# Local Python & Batch server scripts
+server.py
+start-server.bat
+
+# Temporary & Workspace files
+dom_output.html
+scratch/
+.system_generated/
+.gemini/
+.git/
+.github/
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
