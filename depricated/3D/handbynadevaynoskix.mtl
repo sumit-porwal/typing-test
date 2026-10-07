@@ -1,0 +1,24 @@
+# Blender MTL File: 'handbynadevaynoskix.blend'
+# Material Count: 2
+
+newmtl Материал.014
+Ns 338.512375
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.063636 0.063636 0.063636
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd texture/nails_tex.png
+
+newmtl Материал.015
+Ns 82.004147
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.440909 0.440909 0.440909
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd texture/skin_tex.jpg

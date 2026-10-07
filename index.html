@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeyVibe | AI Touch Typing Studio & Realistic Hands Coach</title>
+  <meta name="description"
+    content="Master touch typing with interactive realistic virtual hands, illuminated mechanical keyboard, real-time finger guidance, procedural switch audio, and AI voice coach.">
+
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
+  <!-- PWA & Mobile Web -->
+  <meta name="theme-color" content="#0a0e17">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="KeyVibe | AI Touch Typing Studio & Realistic Hands Coach">
+  <meta property="og:description"
+    content="Master touch typing with interactive realistic virtual hands, illuminated mechanical keyboard, real-time finger guidance, procedural switch audio, and AI voice coach.">
+  <meta property="og:image" content="./image.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="KeyVibe | AI Touch Typing Studio & Realistic Hands Coach">
+  <meta name="twitter:description"
+    content="Master touch typing with interactive realistic virtual hands, illuminated mechanical keyboard, real-time finger guidance, procedural switch audio, and AI voice coach.">
+  <meta name="twitter:image" content="./image.png">
+
+  <link rel="icon" href="./image.png" type="image/x-icon">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <!-- Ambient glowing gradient mesh -->
+  <div class="ambient-mesh" aria-hidden="true"></div>
+
+  <div class="app-wrapper">
+    <!-- Compact Cockpit Header -->
+    <header class="site-header" role="banner">
+      <div class="brand-area">
+        <div class="brand-icon">⌨️</div>
+        <h1 class="brand-title">KeyVibe <span class="brand-badge">STUDIO</span></h1>
+      </div>
+
+      <!-- Center Practice Modes -->
+      <nav class="header-nav" aria-label="Practice Modes">
+        <button class="mode-tab active" data-mode="words">
+          <span>⚡</span> Words
+        </button>
+        <button class="mode-tab" data-mode="academy">
+          <span>🎓</span> Academy
+        </button>
+        <button class="mode-tab" data-mode="quotes">
+          <span>💬</span> Quotes
+        </button>
+      </nav>
+
+      <div class="header-actions">
+        <button class="action-btn active" id="btn-toggle-keyboard" aria-pressed="true"
+          title="Toggle virtual keyboard visibility (Zen / Blind typing mode) [Alt+K]">
+          <span id="kb-toggle-icon">⌨️</span> <span id="kb-toggle-label">Keyboard</span>
+        </button>
+        <button class="action-btn active" id="btn-toggle-hands" aria-pressed="true"
+          title="Toggle realistic hand overlay on keyboard">
+          <span>🖐️</span> Hands Overlay
+        </button>
+        <button class="action-btn" id="btn-toggle-sound" aria-label="Toggle keyboard sound or switch profile"
+          title="Keyboard Sound: Click to cycle profiles, Shift+Click to mute">
+          <span id="sound-toggle-icon">🔊</span> <span id="sound-toggle-label">Thock</span>
+        </button>
+        <button class="action-btn" id="btn-toggle-cursor" aria-label="Toggle cursor style"
+          title="Cursor Style: Click to cycle (Line, Block, Underline, Outline)">
+          <span id="cursor-toggle-icon">|</span> <span id="cursor-toggle-label">Line</span>
+        </button>
+        <button class="action-btn" id="btn-open-custom" title="Practice your own custom text">
+          <span>✍️</span> Custom
+        </button>
+        <button class="action-btn" id="btn-toggle-settings" title="Open Studio Settings (Audio, Hands, Keyboard, Cursor, Voice)">
+          <span>⚙️</span> Settings
+        </button>
+      </div>
+    </header>
+
+    <!-- Subnav Strip (Levels or Word Count / Timed Modes) -->
+    <div class="subnav-strip">
+      <div class="academy-subbar" id="academy-subbar" style="display: none;">
+        <div class="academy-nav-controls">
+          <button class="sub-opt-btn academy-nav-btn" id="btn-academy-prev" title="Previous Lesson">
+            <span>◀</span> Prev
+          </button>
+          <div class="academy-category-wrapper">
+            <select class="subbar-select" id="select-academy-cat" title="Filter Lessons by Category">
+              <option value="all">📚 All Lessons (1–12)</option>
+              <option value="Home Row">🏠 Home Row</option>
+              <option value="Top Row">⬆️ Top Row</option>
+              <option value="Bottom Row">⬇️ Bottom Row</option>
+              <option value="Advanced">⭐ Advanced</option>
+            </select>
+          </div>
+          <button class="sub-opt-btn academy-nav-btn" id="btn-academy-next" title="Next Lesson">
+            Next <span>▶</span>
+          </button>
+          <span class="academy-progress-badge" id="academy-progress-badge" title="Completed Academy Lessons">0/12 Done</span>
+        </div>
+
+        <div class="subbar-divider"></div>
+
+        <div class="academy-lessons-scroll-wrapper">
+          <div id="academy-lessons-list" class="academy-lessons-track"></div>
+        </div>
+      </div>
+
+      <div class="words-subbar" id="words-subbar" style="display: flex;">
+        <div class="subbar-segment">
+          <span class="subbar-segment-label">WORDS</span>
+          <button class="sub-opt-btn" data-words="10">10</button>
+          <button class="sub-opt-btn active" data-words="25">25</button>
+          <button class="sub-opt-btn" data-words="50">50</button>
+          <button class="sub-opt-btn" data-words="100">100</button>
+        </div>
+
+        <div class="subbar-divider"></div>
+
+        <div class="subbar-segment">
+          <span class="subbar-segment-label">TIME</span>
+          <button class="sub-opt-btn" data-time="15">15s</button>
+          <button class="sub-opt-btn" data-time="30">30s</button>
+          <button class="sub-opt-btn" data-time="60">60s</button>
+        </div>
+
+        <div class="subbar-divider"></div>
+
+        <div class="subbar-segment">
+          <button class="sub-toggle-pill" id="toggle-punct" title="Include punctuation marks (. , ! ?)">
+            <span class="pill-sym">@#</span> Punctuation
+          </button>
+          <button class="sub-toggle-pill" id="toggle-numbers" title="Include numbers (0-9)">
+            <span class="pill-sym">123</span> Numbers
+          </button>
+          <select class="subbar-select" id="select-dictionary" title="Select vocabulary dictionary">
+            <option value="standard">Common 200</option>
+            <option value="expanded">Expanded 1k</option>
+            <option value="code">Code &amp; Syntax</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Typing Stage Area (Compact height, live stats & text display) -->
+    <main class="typing-stage" id="main-typing-stage">
+      <div class="stage-top-meta">
+        <div class="mode-info-block">
+          <div class="mode-title-row">
+            <span class="mode-info-title" id="current-mode-title">Word Sprint (25 Words)</span>
+            <span class="academy-cat-pill" id="academy-cat-pill" style="display: none;">Home Row</span>
+            <div class="target-keys-badges" id="target-keys-badges" style="display: none;"></div>
+          </div>
+          <span class="mode-info-desc" id="current-mode-desc">Type common English words with smooth flow and rhythmic cadence.</span>
+        </div>
+
+        <div class="live-metrics-row">
+          <div class="metric-pill">
+            <span class="metric-label">WPM</span>
+            <span class="metric-val val-wpm" id="stat-wpm">0</span>
+          </div>
+          <div class="metric-pill">
+            <span class="metric-label">ACC</span>
+            <span class="metric-val val-acc" id="stat-acc">100%</span>
+          </div>
+          <div class="metric-pill">
+            <span class="metric-label">STREAK 🔥</span>
+            <span class="metric-val val-streak" id="stat-streak">0</span>
+          </div>
+          <div class="metric-pill">
+            <span class="metric-label">TIME</span>
+            <span class="metric-val" id="stat-time">0s</span>
+          </div>
+          <button class="btn-restart" id="btn-restart" title="Restart Test (or press Tab + Enter)">
+            ↺
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Typing Text View with Caret -->
+      <div class="text-display-box" id="text-display" tabindex="0" role="textbox" aria-label="Typing text area">
+        <div class="focus-notice" id="focus-notice">
+          <span class="focus-notice-icon">🖱️</span>
+          <span>Click here or press any key to focus</span>
+        </div>
+        <div class="typing-caret" id="typing-caret"></div>
+        <!-- Dynamically injected characters -->
+      </div>
+
+      <!-- Zen / Blind Typing Mode banner when keyboard is hidden -->
+      <div class="zen-mode-notice" id="zen-mode-notice" style="display: none;">
+        <span class="zen-icon">👁️</span>
+        <span>Blind Touch Typing Mode &bull; Virtual keyboard hidden &bull; Focus purely on the screen!</span>
+      </div>
+    </main>
+
+    <!-- Coach Guidance Bar (rendered by hands.js) -->
+    <section class="virtual-hands-section" aria-label="Typing coach guidance">
+      <div id="hands-container"></div>
+    </section>
+
+    <!-- Virtual Keyboard Section -->
+    <section class="keyboard-section" aria-label="Interactive Virtual Keyboard">
+      <!-- Finger Color Legend (above the keys so the hands never cover it) -->
+      <div class="finger-legend-row">
+        <div class="legend-item"><span class="legend-color-box" style="background: #f43f5e"></span> L. Pinky</div>
+        <div class="legend-item"><span class="legend-color-box" style="background: #f59e0b"></span> L. Ring</div>
+        <div class="legend-item"><span class="legend-color-box" style="background: #84cc16"></span> L. Middle</div>
+        <div class="legend-item"><span class="legend-color-box" style="background: #10b981"></span> L. Index</div>
+        <div class="legend-item"><span class="legend-color-box" style="background: #06b6d4"></span> Thumbs (Space)</div>
+        <div class="legend-item"><span class="legend-color-box" style="background: #3b82f6"></span> R. Index</div>
+        <div class="legend-item"><span class="legend-color-box" style="background: #8b5cf6"></span> R. Middle</div>
+        <div class="legend-item"><span class="legend-color-box" style="background: #d946ef"></span> R. Ring</div>
+        <div class="legend-item"><span class="legend-color-box" style="background: #ec4899"></span> R. Pinky</div>
+      </div>
+
+      <div id="keyboard-container">
+        <!-- Mechanical Keyboard rendered by keyboard.js; hand overlay is drawn on top -->
+      </div>
+    </section>
+
+    <!-- Empty space under the keyboard so palms and wrists are visible -->
+    <div class="hands-room" aria-hidden="true"></div>
+
+    <!-- Quick shortcuts footer hint -->
+    <footer class="app-quick-shortcuts" aria-label="Keyboard Shortcuts">
+      <span class="shortcut-tag"><kbd>Tab</kbd> + <kbd>Enter</kbd> restart</span>
+      <span class="shortcut-tag"><kbd>Alt</kbd> + <kbd>K</kbd> toggle kb</span>
+      <span class="shortcut-tag"><kbd>Esc</kbd> settings</span>
+      <span class="shortcut-tag"><kbd>Shift</kbd> + <kbd>Sound</kbd> mute</span>
+      <span class="shortcut-tag" id="shortcut-mode-hint"><kbd>⚡ Words Mode</kbd> active</span>
+    </footer>
+  </div>
+
+  <!-- Backdrop for Settings Drawer -->
+  <div class="drawer-backdrop" id="drawer-backdrop" aria-hidden="true"></div>
+
+  <!-- Settings & TTS Flyout Drawer -->
+  <aside class="settings-drawer" id="settings-drawer" aria-label="Settings and Studio Controls">
+    <div class="drawer-header">
+      <div class="drawer-header-left">
+        <h3 class="drawer-title">⚙️ Studio Settings</h3>
+        <span class="drawer-badge">Customizer</span>
+      </div>
+      <button class="action-btn" id="btn-close-settings" title="Close Settings (Esc)">✕</button>
+    </div>
+
+    <!-- Category Nav Strip -->
+    <div class="drawer-nav-strip" id="drawer-nav-strip">
+      <button class="drawer-tab active" data-tab="all">✨ All</button>
+      <button class="drawer-tab" data-tab="sound">🔊 Audio</button>
+      <button class="drawer-tab" data-tab="hands">🖐️ Hands</button>
+      <button class="drawer-tab" data-tab="keyboard">⌨️ Keyboard</button>
+      <button class="drawer-tab" data-tab="cursor">▋ Cursor</button>
+      <button class="drawer-tab" data-tab="tts">🗣️ Voice</button>
+    </div>
+
+    <div class="drawer-content-scroll" id="drawer-content-scroll">
+      <!-- Section: Mechanical Sound Engine -->
+      <section class="settings-card" data-card="sound">
+        <div class="settings-card-header">
+          <div class="settings-card-title"><span>🔊</span> Mechanical Sound Engine</div>
+          <button class="action-btn" id="btn-sound-preview" title="Preview currently selected sound"
+            style="padding: 0.15rem 0.55rem; font-size: 0.72rem; min-height: unset;">
+            ▶ Sample
+          </button>
+        </div>
+        <p class="settings-card-desc">Authentic acoustic switch recordings, public voice samples, and dual-action key feedback.</p>
+
+        <div class="form-group">
+          <label class="form-label" for="select-sound-profile">Switch Sound Profile</label>
+          <select class="form-select" id="select-sound-profile">
+            <option value="thock" selected>Creamy Thock (NovelKeys Cream)</option>
+            <option value="clicky">Crisp Tactile (Cherry MX Blue)</option>
+            <option value="typewriter">Vintage Typewriter</option>
+            <option value="soft">Quiet Chiclet / Membrane</option>
+            <option value="cherry_black">Deep Linear (Cherry MX Black)</option>
+            <option value="voice">Public Voice Samples (Spoken Keys)</option>
+            <option value="off">Mute Sound Effects</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="form-label" for="slider-sound-vol" style="margin-bottom: 0;">Audio Volume</label>
+            <span class="metric-val" id="val-sound-vol" style="font-size: 0.76rem; color: #38bdf8;">50%</span>
+          </div>
+          <input type="range" class="form-range" id="slider-sound-vol" min="0" max="100" value="50">
+        </div>
+
+        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 0.5rem 0.65rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 0.5rem;">
+          <div>
+            <label class="form-label" style="margin-bottom: 2px;">Key Release (Upstroke)</label>
+            <span style="font-size: 0.7rem; color: var(--text-dim); display: block;">Realistic slider return clack on keyup</span>
+          </div>
+          <button class="sub-opt-btn active" id="btn-toggle-sound-release" style="min-width: 68px; text-align: center;">ENABLED</button>
+        </div>
+      </section>
+
+      <!-- Section: Hand Overlay Customization -->
+      <section class="settings-card" data-card="hands">
+        <div class="settings-card-header">
+          <div class="settings-card-title"><span>🖐️</span> Realistic Hand Overlay</div>
+        </div>
+        <p class="settings-card-desc">Interactive posture coach overlaid above on-screen keyboard.</p>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="form-label" for="slider-hand-opacity" style="margin-bottom: 0;">Hand Overlay Transparency</label>
+            <span class="metric-val" id="val-hand-opacity" style="font-size: 0.76rem; color: #38bdf8;">50%</span>
+          </div>
+          <input type="range" class="form-range" id="slider-hand-opacity" min="10" max="95" value="50">
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="form-label" for="slider-hand-thickness" style="margin-bottom: 0;">Hand Finger Thickness</label>
+            <span class="metric-val" id="val-hand-thickness" style="font-size: 0.76rem; color: #38bdf8;">100%</span>
+          </div>
+          <input type="range" class="form-range" id="slider-hand-thickness" min="70" max="140" value="100">
+        </div>
+      </section>
+
+      <!-- Section: Keyboard Customization -->
+      <section class="settings-card" data-card="keyboard">
+        <div class="settings-card-header">
+          <div class="settings-card-title"><span>⌨️</span> Virtual Keyboard Appearance</div>
+        </div>
+        <p class="settings-card-desc">Custom chassis themes, keycap height, board width, and visibility.</p>
+
+        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 0.5rem 0.65rem; border-radius: 8px; border: 1px solid var(--border-color);">
+          <div>
+            <label class="form-label" style="margin-bottom: 2px;">Virtual Keyboard</label>
+            <span style="font-size: 0.7rem; color: var(--text-dim); display: block;">Show on-screen keyboard &amp; hands</span>
+          </div>
+          <button class="sub-opt-btn active" id="btn-setting-kb-toggle" style="min-width: 58px; text-align: center;">VISIBLE</button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Chassis &amp; Keycap Theme</label>
+          <div class="theme-grid" id="theme-grid">
+            <button class="theme-card active" data-theme="cyber-dark">
+              <span class="theme-swatch" style="background: linear-gradient(135deg, #1d273a 50%, #090e1a 50%); border-color: #38bdf8;"></span>
+              <span class="theme-name">Cyber Dark</span>
+            </button>
+            <button class="theme-card" data-theme="obsidian">
+              <span class="theme-swatch" style="background: linear-gradient(135deg, #15161c 50%, #050608 50%); border-color: #94a3b8;"></span>
+              <span class="theme-name">Obsidian</span>
+            </button>
+            <button class="theme-card" data-theme="retro-cream">
+              <span class="theme-swatch" style="background: linear-gradient(135deg, #fdfbf7 50%, #d5c8b7 50%); border-color: #ab9b86;"></span>
+              <span class="theme-name">Retro Cream</span>
+            </button>
+            <button class="theme-card" data-theme="matrix">
+              <span class="theme-swatch" style="background: linear-gradient(135deg, #092612 50%, #020d05 50%); border-color: #4ade80;"></span>
+              <span class="theme-name">Matrix Green</span>
+            </button>
+            <button class="theme-card" data-theme="sunset-neon">
+              <span class="theme-swatch" style="background: linear-gradient(135deg, #2f1254 50%, #130728 50%); border-color: #f472b6;"></span>
+              <span class="theme-name">Synthwave</span>
+            </button>
+            <button class="theme-card" data-theme="chalk-light">
+              <span class="theme-swatch" style="background: linear-gradient(135deg, #ffffff 50%, #e2e8f0 50%); border-color: #cbd5e1;"></span>
+              <span class="theme-name">Chalk White</span>
+            </button>
+          </div>
+          <select class="form-select" id="select-kb-theme" style="display: none;">
+            <option value="cyber-dark">Cyber Dark</option>
+            <option value="obsidian">Obsidian</option>
+            <option value="retro-cream">Retro Cream</option>
+            <option value="matrix">Matrix</option>
+            <option value="sunset-neon">Sunset Neon</option>
+            <option value="chalk-light">Chalk Light</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="form-label" for="slider-kb-width" style="margin-bottom: 0;">Keyboard Width</label>
+            <span class="metric-val" id="val-kb-width" style="font-size: 0.76rem; color: #38bdf8;">100%</span>
+          </div>
+          <input type="range" class="form-range" id="slider-kb-width" min="70" max="100" value="100">
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="form-label" for="slider-kb-height" style="margin-bottom: 0;">Key Cap Height</label>
+            <span class="metric-val" id="val-kb-height" style="font-size: 0.76rem; color: #38bdf8;">35px</span>
+          </div>
+          <input type="range" class="form-range" id="slider-kb-height" min="28" max="48" value="35">
+        </div>
+      </section>
+
+      <!-- Section: Cursor Customization -->
+      <section class="settings-card" data-card="cursor">
+        <div class="settings-card-header">
+          <div class="settings-card-title"><span>▋</span> Typing Caret Style</div>
+        </div>
+        <p class="settings-card-desc">Interactive focus tracking caret aesthetic.</p>
+
+        <div class="form-group">
+          <div class="cursor-presets-row" id="cursor-presets">
+            <button class="sub-opt-btn active" data-cursor="line">| Line</button>
+            <button class="sub-opt-btn" data-cursor="block">█ Block</button>
+            <button class="sub-opt-btn" data-cursor="underline">_ Underline</button>
+            <button class="sub-opt-btn" data-cursor="outline">▢ Outline</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: TTS Voice Guidance -->
+      <section class="settings-card" data-card="tts">
+        <div class="settings-card-header">
+          <div class="settings-card-title"><span>🗣️</span> AI Voice Coach &amp; TTS</div>
+          <button class="action-btn" id="btn-tts-test" style="padding: 0.15rem 0.55rem; font-size: 0.72rem; min-height: unset;">
+            🗣️ Test
+          </button>
+        </div>
+        <p class="settings-card-desc">Spoken audio feedback and tactile guidance.</p>
+
+        <div class="form-group">
+          <label class="form-label" for="select-tts-mode">Voice Coach Mode</label>
+          <select class="form-select" id="select-tts-mode">
+            <option value="coach" selected>Tactile Coach ("Left Index, F")</option>
+            <option value="letter">Letter Echo ("F", "Space")</option>
+            <option value="word">Word Dictation (Reads words ahead)</option>
+            <option value="off">Off (Mute Voice)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="select-tts-voice">Coach Voice</label>
+          <select class="form-select" id="select-tts-voice">
+            <option value="">Default System Voice</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="form-label" for="slider-tts-rate" style="margin-bottom: 0;">Speech Speed</label>
+            <span class="metric-val" id="val-tts-rate" style="font-size: 0.76rem; color: #38bdf8;">1.1x</span>
+          </div>
+          <input type="range" class="form-range" id="slider-tts-rate" min="0.8" max="1.5" step="0.05" value="1.1">
+        </div>
+      </section>
+    </div>
+
+    <!-- Drawer Footer Actions -->
+    <div class="drawer-footer">
+      <button class="action-btn btn-sm" id="btn-reset-settings" title="Restore all default studio settings">
+        ↺ Reset Defaults
+      </button>
+      <button class="btn-primary btn-sm" id="btn-done-settings" style="padding: 0.35rem 1rem;">
+        Done
+      </button>
+    </div>
+  </aside>
+
+  <!-- Custom Text Modal -->
+  <div class="modal-backdrop" id="custom-modal" role="dialog" aria-modal="true" aria-labelledby="custom-modal-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="custom-modal-title">✍️ Custom Practice Text</h3>
+        <button class="action-btn" id="btn-close-custom">✕</button>
+      </div>
+      <p style="font-size: 0.8rem; color: var(--text-muted);">Paste any code snippet, article, or paragraph you wish to
+        practice:</p>
+      <textarea class="form-textarea" id="custom-input-text" rows="4"
+        placeholder="Paste custom practice text here..."></textarea>
+      <div class="modal-actions">
+        <button class="btn-primary" id="btn-apply-custom">Start Practice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results & Studio Analytics Modal -->
+  <div class="modal-backdrop" id="result-modal" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
+    <div class="modal-box result-modal-box">
+      <!-- Modal Header with Performance Tier Badge -->
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <div class="rank-tier-badge" id="modal-rank-badge">
+            <span class="rank-icon" id="modal-rank-icon">⚡</span>
+            <div class="rank-info-text">
+              <span class="rank-title" id="modal-rank-title">Pro Typist</span>
+              <span class="rank-tier-label" id="modal-rank-tier">Tier A</span>
+            </div>
+          </div>
+          <span class="rank-subtitle" id="modal-rank-subtitle">Speed &amp; Ergonomic Performance</span>
+        </div>
+        <button class="modal-close-btn" id="btn-modal-close" title="Close (Esc)">✕</button>
+      </div>
+
+      <!-- Hero Metrics Grid -->
+      <div class="stats-hero-grid">
+        <div class="hero-stat-card primary-stat">
+          <span class="stat-card-title">Net Speed</span>
+          <div class="hero-stat-number-row">
+            <span class="hero-stat-val val-cyan" id="modal-wpm">0</span>
+            <span class="hero-stat-unit">WPM</span>
+          </div>
+          <span class="hero-stat-sub" id="modal-wpm-sub">0 raw wpm</span>
+        </div>
+
+        <div class="hero-stat-card">
+          <span class="stat-card-title">Accuracy</span>
+          <div class="hero-stat-number-row">
+            <span class="hero-stat-val val-emerald" id="modal-acc">100%</span>
+          </div>
+          <span class="hero-stat-sub" id="modal-acc-sub">0 errors</span>
+        </div>
+
+        <div class="hero-stat-card">
+          <span class="stat-card-title">Consistency</span>
+          <div class="hero-stat-number-row">
+            <span class="hero-stat-val val-violet" id="modal-consistency">96%</span>
+          </div>
+          <span class="hero-stat-sub">Rhythm Score</span>
+        </div>
+
+        <div class="hero-stat-card">
+          <span class="stat-card-title">Max Streak</span>
+          <div class="hero-stat-number-row">
+            <span class="hero-stat-val val-amber" id="modal-streak">0</span>
+            <span class="hero-stat-unit">🔥</span>
+          </div>
+          <span class="hero-stat-sub" id="modal-streak-sub">Clean streak</span>
+        </div>
+
+        <div class="hero-stat-card">
+          <span class="stat-card-title">Keystrokes</span>
+          <div class="hero-stat-number-row">
+            <span class="hero-stat-val val-dim" id="modal-chars">0/0</span>
+          </div>
+          <span class="hero-stat-sub" id="modal-time-elapsed">0.0s elapsed</span>
+        </div>
+      </div>
+
+      <!-- Interactive Pace & Rhythm Performance Chart -->
+      <div class="chart-section">
+        <div class="chart-header">
+          <div class="chart-legend">
+            <span class="legend-chip"><span class="legend-dot cyan"></span> WPM</span>
+            <span class="legend-chip"><span class="legend-dot violet"></span> Raw WPM</span>
+            <span class="legend-chip"><span class="legend-dot red"></span> Errors</span>
+          </div>
+          <span class="chart-hint">Second-by-Second Velocity</span>
+        </div>
+        <div class="chart-container" id="modal-chart-container">
+          <svg class="performance-chart-svg" id="modal-chart-svg" viewBox="0 0 540 110" preserveAspectRatio="none">
+            <!-- Dynamic SVG elements injected by app.js -->
+          </svg>
+          <div class="chart-tooltip" id="modal-chart-tooltip" style="display: none;"></div>
+        </div>
+      </div>
+
+      <!-- Diagnostics Split Columns: Finger Precision + Weak Keys -->
+      <div class="report-split-grid">
+        <!-- Finger Accuracy Diagnostic -->
+        <div class="diagnostic-card">
+          <div class="diagnostic-card-header">
+            <span class="diagnostic-card-title">🖐️ Finger Precision</span>
+            <span class="diagnostic-card-meta" id="modal-hand-balance">Balanced</span>
+          </div>
+          <div class="finger-breakdown-list" id="modal-finger-breakdown">
+            <!-- Dynamically populated per finger -->
+          </div>
+        </div>
+
+        <!-- Missed Keys & Targeted Drill -->
+        <div class="diagnostic-card">
+          <div class="diagnostic-card-header">
+            <span class="diagnostic-card-title">🎯 Weak Keys Focus</span>
+          </div>
+          <div class="missed-keys-row" id="modal-missed-keys">
+            <!-- Dynamically populated -->
+          </div>
+          <div class="weak-drill-box" id="modal-weak-drill-box" style="display: none;">
+            <p class="weak-drill-desc">Sharpen your muscle memory on these letters:</p>
+            <button class="btn-weak-practice" id="btn-practice-weak">
+              <span>🎯</span> Practice Weak Keys Drill
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Action Bar with Quick Shortcuts -->
+      <div class="modal-actions-bar">
+        <button class="action-btn" id="btn-modal-copy" title="Copy results summary to clipboard">
+          <span>📋</span> Copy Stats
+        </button>
+        <button class="action-btn" id="btn-modal-retry" title="Restart test with same text (or press Tab + Enter)">
+          <span>↺</span> Again <span class="btn-kbd-hint">↵</span>
+        </button>
+        <button class="btn-primary" id="btn-modal-next" title="Start fresh test (or press Space)">
+          <span id="btn-modal-next-label">Next Words →</span> <span class="btn-kbd-hint">Space</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Feedback -->
+  <div class="toast-notification" id="toast-notification" aria-live="polite"></div>
+
+  <!-- Celebratory Confetti Canvas -->
+  <canvas class="celebration-canvas" id="celebration-canvas" aria-hidden="true"></canvas>
+
+  <!-- Settings Drawer Toggle Script -->
+  <script>
+    const settingsDrawer = document.getElementById('settings-drawer');
+    const drawerBackdrop = document.getElementById('drawer-backdrop');
+    const openSettingsBtn = document.getElementById('btn-toggle-settings');
+    const closeSettingsBtn = document.getElementById('btn-close-settings');
+    const doneSettingsBtn = document.getElementById('btn-done-settings');
+
+    function toggleSettingsDrawer(open) {
+      const isOpen = open !== undefined ? open : !settingsDrawer.classList.contains('open');
+      if (settingsDrawer) settingsDrawer.classList.toggle('open', isOpen);
+      if (drawerBackdrop) drawerBackdrop.classList.toggle('open', isOpen);
+    }
+
+    if (openSettingsBtn) openSettingsBtn.addEventListener('click', () => toggleSettingsDrawer(true));
+    if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', () => toggleSettingsDrawer(false));
+    if (drawerBackdrop) drawerBackdrop.addEventListener('click', () => toggleSettingsDrawer(false));
+    if (doneSettingsBtn) doneSettingsBtn.addEventListener('click', () => toggleSettingsDrawer(false));
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && settingsDrawer && settingsDrawer.classList.contains('open')) {
+        toggleSettingsDrawer(false);
+      }
+    });
+
+    // Keep aria-pressed and the spacer in sync with the hands toggle
+    const handsBtn = document.getElementById('btn-toggle-hands');
+    const handsRoom = document.querySelector('.hands-room');
+    if (handsBtn) {
+      handsBtn.addEventListener('click', () => {
+        const on = !handsBtn.classList.contains('active');
+        handsBtn.classList.toggle('active', on);
+        handsBtn.setAttribute('aria-pressed', String(on));
+        if (handsRoom) handsRoom.classList.toggle('collapsed', !on);
+      });
+    }
+  </script>
+
+  <!-- Modular App Logic -->
+  <script type="module" src="js/app.js?v=2.7"></script>
+</body>
+
+</html>

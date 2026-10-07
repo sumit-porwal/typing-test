@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en" class="calibrator-html">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeyVibe 3D Hand &amp; Finger Calibrator Studio</title>
+  <meta name="description"
+    content="Interactive calibration studio to map 3D hand and finger positions for each mechanical keycap with live real-time feedback.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="icon" href="./image.png" type="image/x-icon">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/calibrate.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+
+<body class="calibrator-page" data-kb-theme="cyber-dark">
+  <!-- Glowing ambient background -->
+  <div class="ambient-mesh" aria-hidden="true"></div>
+
+  <div class="app-wrapper">
+    <!-- Header Navigation -->
+    <header class="site-header" role="banner">
+      <div class="brand-area">
+        <div class="brand-icon">🎯</div>
+        <h1 class="brand-title">KeyVibe <span class="brand-badge">3D CALIBRATOR</span></h1>
+      </div>
+
+      <div class="header-actions">
+        <a href="index.html" class="action-btn" title="Return to typing practice">
+          <span>←</span> Back to Studio
+        </a>
+        <button class="action-btn" id="btn-copy-code" title="Copy ES Module code for js/fingerCalibration.js">
+          <span>📋</span> Copy Code
+        </button>
+        <button class="action-btn" id="btn-download-file" title="Download fingerCalibration.js file">
+          <span>📥</span> Export File
+        </button>
+        <button class="btn-primary" id="btn-save-file" title="Save directly to js/fingerCalibration.js">
+          <span>💾</span> Save to File
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Split Grid -->
+    <main class="calib-layout">
+      <!-- Left: Interactive Stage with 3D Hands & Keyboard -->
+      <section class="calib-stage">
+        <div class="calib-keyboard-card">
+          <!-- Viewport Toolbar -->
+          <div class="calib-stage-toolbar">
+            <div class="camera-controls-group">
+              <span class="subbar-segment-label">CAMERA POV</span>
+              <button class="cam-btn active" data-cam="default">Normal (3D)</button>
+              <button class="cam-btn" data-cam="top">Top-Down (Planar)</button>
+              <button class="cam-btn" data-cam="closeup">Target Focus</button>
+              <button class="cam-btn" data-cam="side">Side View</button>
+            </div>
+
+            <div style="display: flex; gap: 0.4rem; align-items: center;">
+              <button class="cam-btn" id="btn-test-strike" title="Test keystroke tap animation (or press Space)">
+                <span>⚡</span> Test Keystroke Tap <kbd>Space</kbd>
+              </button>
+              <button class="cam-btn" id="btn-toggle-3d-opacity" title="Toggle hand skin opacity">
+                <span>👁️</span> Opacity
+              </button>
+            </div>
+          </div>
+
+          <!-- Virtual Keyboard & 3D Hands Canvas -->
+          <div class="keyboard-section" style="border: none; padding: 0.2rem 0; box-shadow: none; background: transparent;">
+            <div class="finger-legend-row" style="border-top: none; padding-bottom: 0.4rem;">
+              <div class="legend-item"><span class="legend-color-box" style="background: #f43f5e"></span> L. Pinky</div>
+              <div class="legend-item"><span class="legend-color-box" style="background: #f59e0b"></span> L. Ring</div>
+              <div class="legend-item"><span class="legend-color-box" style="background: #84cc16"></span> L. Middle</div>
+              <div class="legend-item"><span class="legend-color-box" style="background: #10b981"></span> L. Index</div>
+              <div class="legend-item"><span class="legend-color-box" style="background: #06b6d4"></span> Thumbs</div>
+              <div class="legend-item"><span class="legend-color-box" style="background: #3b82f6"></span> R. Index</div>
+              <div class="legend-item"><span class="legend-color-box" style="background: #8b5cf6"></span> R. Middle</div>
+              <div class="legend-item"><span class="legend-color-box" style="background: #d946ef"></span> R. Ring</div>
+              <div class="legend-item"><span class="legend-color-box" style="background: #ec4899"></span> R. Pinky</div>
+            </div>
+
+            <div id="keyboard-container">
+              <!-- Mechanical Keyboard rendered by keyboard.js; 3D hands overlay renders directly on top -->
+            </div>
+          </div>
+
+          <div class="hands-room" style="height: 48px;"></div>
+        </div>
+
+        <!-- Full Board Key Matrix Overview -->
+        <div class="calib-card">
+          <div class="calib-card-header">
+            <span class="calib-card-title"><span>🗂️</span> Full Keyboard Matrix Overview</span>
+            <span style="font-size: 0.7rem; color: var(--text-dim);" id="matrix-status-text">Click any key or press physical key</span>
+          </div>
+          <div class="matrix-grid" id="matrix-grid">
+            <!-- Dynamically populated key pills -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Inspector HUD & Precision Adjusters -->
+      <aside class="calib-sidebar" id="calib-sidebar">
+        <!-- Mode Switcher Tabs -->
+        <div class="calib-mode-tabs">
+          <button class="calib-tab-btn active" id="tab-btn-keys" data-tab="keys">
+            <span>🎯</span> Key Offsets
+          </button>
+          <button class="calib-tab-btn" id="tab-btn-hands" data-tab="hands">
+            <span>🖐️</span> Hand Position
+          </button>
+          <button class="calib-tab-btn" id="tab-btn-fingers" data-tab="fingers">
+            <span>🤏</span> Finger Curl &amp; Stretch
+          </button>
+        </div>
+
+
+        <!-- PANEL 1: Per-Key Offsets -->
+        <div class="calib-tab-panel" id="panel-tab-keys">
+          <!-- Target Key & Finger Header Card -->
+          <div class="calib-card calib-card-compact">
+            <div class="active-key-hero">
+              <div class="key-hero-left">
+                <div class="key-hero-cap" id="hero-key-label">F</div>
+                <div class="key-hero-meta">
+                  <div style="display: flex; align-items: center; gap: 0.4rem;">
+                    <span class="key-hero-code" id="hero-key-code">KeyF</span>
+                    <span class="badge" id="key-modified-badge" style="display: none; background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.62rem; padding: 1px 5px; border-radius: 4px;">CALIBRATED</span>
+                  </div>
+                  <span class="key-hero-category" id="hero-key-category">Home Row Anchor</span>
+                </div>
+              </div>
+              
+              <div class="calib-nav-row" style="margin-left: auto;">
+                <button class="action-btn btn-nav-key" id="btn-prev-key" title="Select previous key (Shift + Tab)">
+                  <span>◀</span> Prev
+                </button>
+                <button class="action-btn btn-nav-key" id="btn-next-key" title="Select next key (Tab)">
+                  Next <span>▶</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Assigned Finger Quick Chips -->
+            <div class="finger-select-strip">
+              <span class="subbar-segment-label" style="margin-bottom: 2px;">ASSIGNED FINGER</span>
+              <div class="finger-selector-grid" id="finger-selector-grid">
+                <button class="finger-select-btn" data-finger="LP" title="Left Pinky">
+                  <span class="finger-dot" style="background: #f43f5e;"></span>
+                  <span class="finger-select-label">LP</span>
+                </button>
+                <button class="finger-select-btn" data-finger="LR" title="Left Ring">
+                  <span class="finger-dot" style="background: #f59e0b;"></span>
+                  <span class="finger-select-label">LR</span>
+                </button>
+                <button class="finger-select-btn" data-finger="LM" title="Left Middle">
+                  <span class="finger-dot" style="background: #84cc16;"></span>
+                  <span class="finger-select-label">LM</span>
+                </button>
+                <button class="finger-select-btn active" data-finger="LI" title="Left Index">
+                  <span class="finger-dot" style="background: #10b981;"></span>
+                  <span class="finger-select-label">LI</span>
+                </button>
+                <button class="finger-select-btn" data-finger="LT" title="Left Thumb">
+                  <span class="finger-dot" style="background: #06b6d4;"></span>
+                  <span class="finger-select-label">LT</span>
+                </button>
+                <button class="finger-select-btn" data-finger="RT" title="Right Thumb">
+                  <span class="finger-dot" style="background: #06b6d4;"></span>
+                  <span class="finger-select-label">RT</span>
+                </button>
+                <button class="finger-select-btn" data-finger="RI" title="Right Index">
+                  <span class="finger-dot" style="background: #3b82f6;"></span>
+                  <span class="finger-select-label">RI</span>
+                </button>
+                <button class="finger-select-btn" data-finger="RM" title="Right Middle">
+                  <span class="finger-dot" style="background: #8b5cf6;"></span>
+                  <span class="finger-select-label">RM</span>
+                </button>
+                <button class="finger-select-btn" data-finger="RR" title="Right Ring">
+                  <span class="finger-dot" style="background: #d946ef;"></span>
+                  <span class="finger-select-label">RR</span>
+                </button>
+                <button class="finger-select-btn" data-finger="RP" title="Right Pinky">
+                  <span class="finger-dot" style="background: #ec4899;"></span>
+                  <span class="finger-select-label">RP</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3D Offset Calibration Steppers -->
+          <div class="calib-card" id="calib-card-offsets" style="margin-top: 0.65rem;">
+            <div class="calib-card-header">
+              <span class="calib-card-title"><span>📐</span> 3D Micro-Offsets</span>
+              <div style="display: flex; gap: 0.35rem;">
+                <button class="action-btn" id="btn-reset-current-key" style="font-size: 0.68rem; padding: 2px 7px;">
+                  ↺ Reset Key
+                </button>
+              </div>
+            </div>
+
+            <!-- Offset X: Horizontal -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">X Offset (Left ◀ ▶ Right)</span>
+                <span class="offset-badge-val" id="val-offset-x" title="Click to enter exact value">0.0</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-x" title="Nudge Left [-0.1]">-</button>
+                <input type="range" class="form-range calib-range" id="slider-offset-x" min="-100.0" max="100.0" step="0.01" value="0.0">
+                <button class="stepper-btn" id="btn-inc-x" title="Nudge Right [+0.1]">+</button>
+              </div>
+            </div>
+
+            <!-- Offset Z: Depth -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Z Offset (Back ◀ ▶ Front)</span>
+                <span class="offset-badge-val" id="val-offset-z" title="Click to enter exact value">0.0</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-z" title="Nudge Back [-0.1]">-</button>
+                <input type="range" class="form-range calib-range" id="slider-offset-z" min="-100.0" max="100.0" step="0.01" value="0.0">
+                <button class="stepper-btn" id="btn-inc-z" title="Nudge Forward [+0.1]">+</button>
+              </div>
+            </div>
+
+            <!-- Offset Y: Height -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Y Touch Height (Up ◀ ▶ Down)</span>
+                <span class="offset-badge-val" id="val-offset-y" title="Click to enter exact value">0.0</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-y" title="Lower Height [-0.05]">-</button>
+                <input type="range" class="form-range calib-range" id="slider-offset-y" min="-50.0" max="50.0" step="0.01" value="0.0">
+                <button class="stepper-btn" id="btn-inc-y" title="Raise Height [+0.05]">+</button>
+              </div>
+            </div>
+
+            <!-- Quick Hotkey Guidance -->
+            <div class="hotkeys-card">
+              <div class="hotkey-item">
+                <span>Nudge Position</span>
+                <span><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></span>
+              </div>
+              <div class="hotkey-item">
+                <span>Large Step (0.5)</span>
+                <span><kbd>Shift</kbd> + <kbd>Arrows</kbd></span>
+              </div>
+              <div class="hotkey-item">
+                <span>Test Strike</span>
+                <span><kbd>Spacebar</kbd></span>
+              </div>
+              <div class="hotkey-item">
+                <span>Cycle Keys</span>
+                <span><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 2: Move, Rotate & Scale Hands -->
+        <div class="calib-tab-panel" id="panel-tab-hands" style="display: none;">
+          <!-- Hand Scale (Size) Card -->
+          <div class="calib-card">
+            <div class="calib-card-header">
+              <span class="calib-card-title"><span>🔍</span> Hand Scale (Size)</span>
+              <div style="display: flex; gap: 0.35rem; align-items: center;">
+                <span class="offset-badge-val" id="val-hand-scale" title="Click to enter exact value">100% (1.00x)</span>
+                <button class="action-btn" id="btn-reset-hand-scale" style="font-size: 0.68rem; padding: 2px 7px;" title="Reset scale to 1.00x">
+                  ↺ Reset
+                </button>
+              </div>
+            </div>
+            <div class="offset-row">
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-hand-scale" title="Shrink Hands [-5%]">-</button>
+                <input type="range" class="form-range calib-range" id="slider-hand-scale" min="0.05" max="10.0" step="0.01" value="1.0">
+                <button class="stepper-btn" id="btn-inc-hand-scale" title="Enlarge Hands [+5%]">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Move Hands (Position X, Z, Y & Spacing) Card -->
+          <div class="calib-card">
+            <div class="calib-card-header">
+              <span class="calib-card-title"><span>🖐️</span> Move Hands (Position)</span>
+              <button class="action-btn" id="btn-reset-hand-pos" style="font-size: 0.68rem; padding: 2px 7px;">
+                ↺ Reset Move
+              </button>
+            </div>
+
+            <!-- Position X -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Horizontal Shift (X)</span>
+                <span class="offset-badge-val" id="val-hand-pos-x" title="Click to enter exact value">0.00</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-hand-pos-x">-</button>
+                <input type="range" class="form-range calib-range" id="slider-hand-pos-x" min="-100.0" max="100.0" step="0.01" value="0.0">
+                <button class="stepper-btn" id="btn-inc-hand-pos-x">+</button>
+              </div>
+            </div>
+
+            <!-- Position Z -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Depth (Z) [Back ◀ ▶ Front]</span>
+                <span class="offset-badge-val" id="val-hand-pos-z" title="Click to enter exact value">-0.50</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-hand-pos-z">-</button>
+                <input type="range" class="form-range calib-range" id="slider-hand-pos-z" min="-100.0" max="100.0" step="0.01" value="-0.50">
+                <button class="stepper-btn" id="btn-inc-hand-pos-z">+</button>
+              </div>
+            </div>
+
+            <!-- Position Y (Desk height) -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Desk Height (Y)</span>
+                <span class="offset-badge-val" id="val-hand-pos-y" title="Click to enter exact value">0.18</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-hand-pos-y">-</button>
+                <input type="range" class="form-range calib-range" id="slider-hand-pos-y" min="-50.0" max="50.0" step="0.01" value="0.18">
+                <button class="stepper-btn" id="btn-inc-hand-pos-y">+</button>
+              </div>
+            </div>
+
+            <!-- Hand Spacing (Distance between wrists/elbows) -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Hand Separation / Spacing</span>
+                <span class="offset-badge-val" id="val-hand-spacing" title="Click to enter exact value">0.60</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-hand-spacing">-</button>
+                <input type="range" class="form-range calib-range" id="slider-hand-spacing" min="-50.0" max="50.0" step="0.005" value="0.60">
+                <button class="stepper-btn" id="btn-inc-hand-spacing">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rotate Hands (Angles: Yaw, Pitch, Roll) Card -->
+          <div class="calib-card">
+            <div class="calib-card-header">
+              <span class="calib-card-title"><span>🔄</span> Rotate Hands (Angles)</span>
+              <button class="action-btn" id="btn-reset-hand-rot" style="font-size: 0.68rem; padding: 2px 7px;">
+                ↺ Reset Angles
+              </button>
+            </div>
+
+            <!-- Yaw (Inward angle) -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Inward Forearm Angle (Yaw)</span>
+                <span class="offset-badge-val" id="val-hand-rot-yaw" title="Click to enter exact value">7.0°</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-hand-rot-yaw">-</button>
+                <input type="range" class="form-range calib-range" id="slider-hand-rot-yaw" min="-360.0" max="360.0" step="0.1" value="7.0">
+                <button class="stepper-btn" id="btn-inc-hand-rot-yaw">+</button>
+              </div>
+            </div>
+
+            <!-- Pitch (Knuckle arch tilt) -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Knuckle Arch Tilt (Pitch)</span>
+                <span class="offset-badge-val" id="val-hand-rot-pitch" title="Click to enter exact value">-6.0°</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-hand-rot-pitch">-</button>
+                <input type="range" class="form-range calib-range" id="slider-hand-rot-pitch" min="-360.0" max="360.0" step="0.1" value="-6.0">
+                <button class="stepper-btn" id="btn-inc-hand-rot-pitch">+</button>
+              </div>
+            </div>
+
+            <!-- Roll (Forearm twist) -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Forearm Roll Tilt (Roll)</span>
+                <span class="offset-badge-val" id="val-hand-rot-roll" title="Click to enter exact value">0.0°</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-hand-rot-roll">-</button>
+                <input type="range" class="form-range calib-range" id="slider-hand-rot-roll" min="-360.0" max="360.0" step="0.1" value="0.0">
+                <button class="stepper-btn" id="btn-inc-hand-rot-roll">+</button>
+              </div>
+            </div>
+
+            <!-- Quick Presets -->
+            <div style="display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.2rem;">
+              <button class="cam-btn" id="preset-hand-default">Natural Default</button>
+              <button class="cam-btn" id="preset-hand-closer">Closer In</button>
+              <button class="cam-btn" id="preset-hand-wide">Wider Elbows</button>
+              <button class="cam-btn" id="preset-hand-flat">Flatter Arch</button>
+            </div>
+          </div>
+
+          <!-- Quick Hotkey Guidance for Hand Controls -->
+          <div class="hotkeys-card">
+            <div class="hotkey-item">
+              <span>Move Hands (X/Z)</span>
+              <span><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></span>
+            </div>
+            <div class="hotkey-item">
+              <span>Change Scale</span>
+              <span><kbd>[</kbd> <kbd>]</kbd></span>
+            </div>
+            <div class="hotkey-item">
+              <span>Adjust Height</span>
+              <span><kbd>PgUp</kbd> / <kbd>PgDn</kbd></span>
+            </div>
+            <div class="hotkey-item">
+              <span>Fast Step (0.25)</span>
+              <span><kbd>Shift</kbd> + <kbd>Arrows</kbd></span>
+            </div>
+            <div class="hotkey-item">
+              <span>Test Strike</span>
+              <span><kbd>Spacebar</kbd></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 3: Finger Rest Pose, Stretch & Curl -->
+        <div class="calib-tab-panel" id="panel-tab-fingers" style="display: none;">
+          <!-- Master Curl & Reach Stretch Card -->
+          <div class="calib-card">
+            <div class="calib-card-header">
+              <span class="calib-card-title"><span>🌀</span> Master Curl &amp; Reach Stretch</span>
+              <button class="action-btn" id="btn-reset-master-posture" style="font-size: 0.68rem; padding: 2px 7px;">
+                ↺ Reset Master
+              </button>
+            </div>
+
+            <!-- Master Resting Curl -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">All Fingers Rest Curl (Multiplier)</span>
+                <span class="offset-badge-val" id="val-posture-master-curl" title="Click to enter exact value">1.00x</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-master-curl" title="Flatter Fingers [-0.05]">-</button>
+                <input type="range" class="form-range calib-range" id="slider-posture-master-curl" min="-2.0" max="5.0" step="0.01" value="1.0">
+                <button class="stepper-btn" id="btn-inc-master-curl" title="Curled Fingers [+0.05]">+</button>
+              </div>
+            </div>
+
+            <!-- Reach Stretch Sensitivity -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Reach Stretch Sensitivity (Extension)</span>
+                <span class="offset-badge-val" id="val-posture-reach-stretch" title="Click to enter exact value">1.00x</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-reach-stretch" title="Tighter Stretch [-0.05]">-</button>
+                <input type="range" class="form-range calib-range" id="slider-posture-reach-stretch" min="-5.0" max="10.0" step="0.01" value="1.0">
+                <button class="stepper-btn" id="btn-inc-reach-stretch" title="Further Extension [+0.05]">+</button>
+              </div>
+            </div>
+
+            <!-- Master Finger Spread / Splay -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Fingers Lateral Spread / Splay</span>
+                <span class="offset-badge-val" id="val-posture-master-splay" title="Click to enter exact value">0.00</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-master-splay" title="Narrower [-0.02]">-</button>
+                <input type="range" class="form-range calib-range" id="slider-posture-master-splay" min="-2.0" max="2.0" step="0.005" value="0.0">
+                <button class="stepper-btn" id="btn-inc-master-splay" title="Wider Spread [+0.02]">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Per-Finger Individual Resting Curls Card -->
+          <div class="calib-card">
+            <div class="calib-card-header">
+              <span class="calib-card-title"><span>📐</span> Individual Finger Resting Curls</span>
+              <button class="action-btn" id="btn-reset-curls" style="font-size: 0.68rem; padding: 2px 7px;">
+                ↺ Reset Curls
+              </button>
+            </div>
+
+            <!-- Index Finger Curl -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label" style="display: flex; align-items: center; gap: 4px;">
+                  <span class="finger-dot" style="background: #10b981;"></span> Index Finger Curl (I)
+                </span>
+                <span class="offset-badge-val" id="val-posture-curl-index" title="Click to enter exact value">0.28</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-curl-index">-</button>
+                <input type="range" class="form-range calib-range" id="slider-posture-curl-index" min="-2.0" max="3.0" step="0.01" value="0.28">
+                <button class="stepper-btn" id="btn-inc-curl-index">+</button>
+              </div>
+            </div>
+
+            <!-- Middle Finger Curl -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label" style="display: flex; align-items: center; gap: 4px;">
+                  <span class="finger-dot" style="background: #84cc16;"></span> Middle Finger Curl (M)
+                </span>
+                <span class="offset-badge-val" id="val-posture-curl-middle" title="Click to enter exact value">0.30</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-curl-middle">-</button>
+                <input type="range" class="form-range calib-range" id="slider-posture-curl-middle" min="-2.0" max="3.0" step="0.01" value="0.30">
+                <button class="stepper-btn" id="btn-inc-curl-middle">+</button>
+              </div>
+            </div>
+
+            <!-- Ring Finger Curl -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label" style="display: flex; align-items: center; gap: 4px;">
+                  <span class="finger-dot" style="background: #f59e0b;"></span> Ring Finger Curl (R)
+                </span>
+                <span class="offset-badge-val" id="val-posture-curl-ring" title="Click to enter exact value">0.26</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-curl-ring">-</button>
+                <input type="range" class="form-range calib-range" id="slider-posture-curl-ring" min="-2.0" max="3.0" step="0.01" value="0.26">
+                <button class="stepper-btn" id="btn-inc-curl-ring">+</button>
+              </div>
+            </div>
+
+            <!-- Pinky Finger Curl -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label" style="display: flex; align-items: center; gap: 4px;">
+                  <span class="finger-dot" style="background: #f43f5e;"></span> Pinky Finger Curl (P)
+                </span>
+                <span class="offset-badge-val" id="val-posture-curl-pinky" title="Click to enter exact value">0.22</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-curl-pinky">-</button>
+                <input type="range" class="form-range calib-range" id="slider-posture-curl-pinky" min="-2.0" max="3.0" step="0.01" value="0.22">
+                <button class="stepper-btn" id="btn-inc-curl-pinky">+</button>
+              </div>
+            </div>
+
+            <!-- Thumb Curl -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label" style="display: flex; align-items: center; gap: 4px;">
+                  <span class="finger-dot" style="background: #06b6d4;"></span> Thumb Rest Curl (T)
+                </span>
+                <span class="offset-badge-val" id="val-posture-curl-thumb" title="Click to enter exact value">0.15</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-curl-thumb">-</button>
+                <input type="range" class="form-range calib-range" id="slider-posture-curl-thumb" min="-2.0" max="3.0" step="0.01" value="0.15">
+                <button class="stepper-btn" id="btn-inc-curl-thumb">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Per-Finger Lateral Splay Card -->
+          <div class="calib-card">
+            <div class="calib-card-header">
+              <span class="calib-card-title"><span>↔️</span> Finger Splay / Resting Angles</span>
+              <button class="action-btn" id="btn-reset-splay" style="font-size: 0.68rem; padding: 2px 7px;">
+                ↺ Reset Splay
+              </button>
+            </div>
+
+            <!-- Index Splay -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Index Lateral Splay</span>
+                <span class="offset-badge-val" id="val-posture-splay-index" title="Click to enter exact value">0.00</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-splay-index">-</button>
+                <input type="range" class="form-range calib-range" id="slider-posture-splay-index" min="-2.0" max="2.0" step="0.005" value="0.0">
+                <button class="stepper-btn" id="btn-inc-splay-index">+</button>
+              </div>
+            </div>
+
+            <!-- Pinky Splay -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Pinky Lateral Splay</span>
+                <span class="offset-badge-val" id="val-posture-splay-pinky" title="Click to enter exact value">0.00</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-splay-pinky">-</button>
+                <input type="range" class="form-range calib-range" id="slider-posture-splay-pinky" min="-2.0" max="2.0" step="0.005" value="0.0">
+                <button class="stepper-btn" id="btn-inc-splay-pinky">+</button>
+              </div>
+            </div>
+
+            <!-- Thumb Splay -->
+            <div class="offset-row">
+              <div class="offset-row-header">
+                <span class="offset-label">Thumb Splay / Abduction</span>
+                <span class="offset-badge-val" id="val-posture-splay-thumb" title="Click to enter exact value">0.00</span>
+              </div>
+              <div class="offset-controls-wrapper">
+                <button class="stepper-btn" id="btn-dec-splay-thumb">-</button>
+                <input type="range" class="form-range calib-range" id="slider-posture-splay-thumb" min="-2.0" max="2.0" step="0.005" value="0.0">
+                <button class="stepper-btn" id="btn-inc-splay-thumb">+</button>
+              </div>
+            </div>
+
+            <!-- Presets -->
+            <div style="display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.4rem;">
+              <button class="cam-btn" id="preset-posture-natural">Natural Arch</button>
+              <button class="cam-btn" id="preset-posture-flat">Flat / Stretched</button>
+              <button class="cam-btn" id="preset-posture-claw">Curled Claw</button>
+              <button class="cam-btn" id="preset-posture-relaxed">Relaxed Pianist</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Global Persistence & Reset -->
+        <div class="calib-card">
+          <div class="save-actions-bar">
+            <button class="btn-primary" id="btn-save-sidebar" style="width: 100%; justify-content: center;">
+              <span>💾</span> Save All to js/fingerCalibration.js
+            </button>
+            <div class="save-status-msg" id="save-status-msg"></div>
+            <button class="action-btn" id="btn-reset-all" style="width: 100%; justify-content: center; color: #f87171;">
+              ⚠️ Reset All Keys to Factory Defaults
+            </button>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Toast Notification Feedback -->
+  <div class="toast-notification" id="toast-notification" aria-live="polite"></div>
+
+  <!-- Main Calibrator Controller Script -->
+  <script type="module" src="js/calibrateApp.js"></script>
+</body>
+
+</html>

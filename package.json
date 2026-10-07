@@ -1,0 +1,23 @@
+{
+  "name": "keyvibe-touch-typing-studio",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Interactive touch typing studio with realistic posture-accurate hand overlay, illuminated mechanical keyboard, procedural and sampled mechanical switch audio, and AI voice guidance.",
+  "scripts": {
+    "start": "python server.py 3000",
+    "dev": "python server.py 3000",
+    "serve": "npx serve -p 3000 .",
+    "test": "node -c js/app.js js/audio.js js/handOverlay.js js/hands.js js/keyboard.js js/lessons.js js/tts.js"
+  },
+  "keywords": [
+    "typing",
+    "touch-typing",
+    "typing-tutor",
+    "virtual-hands",
+    "mechanical-keyboard",
+    "web-audio",
+    "voice-coach"
+  ],
+  "author": "KeyVibe Team",
+  "license": "MIT"
+}

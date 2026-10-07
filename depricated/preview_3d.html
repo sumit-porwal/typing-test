@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hands + Armature 3D Studio</title>
+  <style>
+    :root {
+      --bg-dark: #070a10;
+      --panel-bg: rgba(11, 17, 30, 0.94);
+      --panel-border: rgba(56, 189, 248, 0.25);
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+    #info-panel {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 100;
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      padding: 16px 20px;
+      border-radius: 14px;
+      border: 1px solid var(--panel-border);
+      font-size: 12px;
+      line-height: 1.45;
+      width: 390px;
+      max-height: calc(100vh - 28px);
+      overflow-y: auto;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
+    }
+    #info-panel::-webkit-scrollbar { width: 5px; }
+    #info-panel::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.18);
+      border-radius: 4px;
+    }
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--panel-bg);
+      padding: 20px 32px;
+      border-radius: 14px;
+      border: 1px solid var(--panel-border);
+      z-index: 200;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    }
+    .btn {
+      background: var(--accent-hover);
+      color: #fff;
+      border: none;
+      padding: 6px 11px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 11px;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .btn:hover { background: #0369a1; transform: translateY(-1px); }
+    .btn-secondary { background: #1e293b; color: #cbd5e1; }
+    .btn-secondary:hover { background: #334155; color: #fff; }
+    .btn-purple { background: #8b5cf6; }
+    .btn-purple:hover { background: #7c3aed; }
+    .btn-green { background: #10b981; }
+    .btn-green:hover { background: #059669; }
+    .btn-active {
+      outline: 2px solid var(--accent);
+      background: #0284c7;
+      color: #fff;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.18);
+      color: var(--accent);
+      font-size: 10.5px;
+      font-weight: 700;
+    }
+    .badge-green {
+      background: rgba(34, 197, 94, 0.18);
+      color: #4ade80;
+    }
+    .section-title {
+      font-weight: 700;
+      color: #e2e8f0;
+      font-size: 11px;
+      margin-top: 13px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .box-group {
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 8px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 5px 0;
+      font-size: 11.5px;
+      color: #cbd5e1;
+    }
+    .slider-row label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .slider-row span.val {
+      font-family: monospace;
+      font-size: 10.5px;
+      color: var(--accent);
+      min-width: 34px;
+      text-align: right;
+    }
+    .slider-row input[type="range"] {
+      width: 140px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .key-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .key-btn {
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 5px;
+      padding: 6px 0;
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.1s ease;
+    }
+    .key-btn:hover {
+      background: #334155;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .key-btn:active, .key-btn.pressed {
+      background: var(--accent);
+      color: #070a10;
+      transform: translateY(1.5px);
+    }
+    .key-space {
+      grid-column: span 5;
+      padding: 7px 0;
+      background: #1e293b;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="info-panel">
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <strong style="color:var(--accent); font-size:15px; letter-spacing:0.3px;">Hands + Armature Studio</strong>
+      <span class="badge badge-green" id="rigStatusBadge">Dual 26-Joint Rigs</span>
+    </div>
+    <div style="color:var(--text-muted); font-size:11.5px; margin-top:3px;">
+      Ergonomic typing posture • Direct bone joint articulation • Flip &amp; spacing controls
+    </div>
+
+    <!-- Hand Stance & Visibility Controls -->
+    <div class="section-title">
+      <span>Display &amp; View</span>
+      <span id="stanceLabel" style="font-size:10.5px; color:#4ade80; text-transform:none; font-weight:600;">Palms Down (Typing)</span>
+    </div>
+    <div style="display:flex; gap:5px; flex-wrap:wrap;">
+      <button id="toggleBoth" class="btn btn-active">Both Hands</button>
+      <button id="toggleLeftOnly" class="btn btn-secondary">Left Only</button>
+      <button id="toggleRightOnly" class="btn btn-secondary">Right Only</button>
+      <button id="btnFlipHands" class="btn btn-green">🔄 Flip Palms</button>
+      <button id="toggleSkeleton" class="btn btn-secondary">Skeleton</button>
+      <button id="toggleTypingAnim" class="btn btn-purple">▶ Typing Demo</button>
+    </div>
+
+    <!-- Hand Placement & Spacing -->
+    <div class="section-title">Hand Placement &amp; Spacing</div>
+    <div class="box-group">
+      <div class="slider-row">
+        <label>Hand Spacing (Distance)</label>
+        <input type="range" id="spacingSlider" min="0.8" max="4.0" step="0.05" value="1.6">
+        <span class="val" id="val_spacing">1.60</span>
+      </div>
+      <div class="slider-row">
+        <label>Model Scale</label>
+        <input type="range" id="scaleSlider" min="5.0" max="15.0" step="0.2" value="7.8">
+        <span class="val" id="val_scale">7.8</span>
+      </div>
+      <div class="slider-row">
+        <label>Wrist Tilt (Pitch)</label>
+        <input type="range" id="pitchSlider" min="-30" max="30" step="1" value="-3">
+        <span class="val" id="val_pitch">-3°</span>
+      </div>
+      <div class="slider-row">
+        <label>Height (Y Position)</label>
+        <input type="range" id="heightSlider" min="-1.5" max="3.0" step="0.05" value="0.35">
+        <span class="val" id="val_height">0.35</span>
+      </div>
+      <div style="display:flex; justify-content:flex-end; margin-top:6px;">
+        <button id="btnResetPose" class="btn btn-secondary" style="font-size:10.5px; padding:3px 8px;">Reset Wrist Stance</button>
+      </div>
+    </div>
+
+    <!-- Finger Articulation Controls -->
+    <div class="section-title">
+      <span>Finger Rigs Articulation</span>
+      <button id="btnRelaxHands" class="btn btn-secondary" style="font-size:10px; padding:2px 7px;">Ergo Typing Arch</button>
+    </div>
+    <div class="box-group" id="fingerControls">
+      <div class="slider-row">
+        <label><b>Master Curl (All 10 Fingers)</b></label>
+        <input type="range" id="curl_ALL" min="-0.3" max="1.3" step="0.02" value="0.25">
+        <span class="val" id="val_ALL">0.25</span>
+      </div>
+      <div class="slider-row">
+        <label>Thumb Curl</label>
+        <input type="range" id="curl_T" min="-0.3" max="1.3" step="0.02" value="0.15">
+        <span class="val" id="val_T">0.15</span>
+      </div>
+      <div class="slider-row">
+        <label>Index Finger</label>
+        <input type="range" id="curl_I" min="-0.3" max="1.3" step="0.02" value="0.30">
+        <span class="val" id="val_I">0.30</span>
+      </div>
+      <div class="slider-row">
+        <label>Middle Finger</label>
+        <input type="range" id="curl_M" min="-0.3" max="1.3" step="0.02" value="0.32">
+        <span class="val" id="val_M">0.32</span>
+      </div>
+      <div class="slider-row">
+        <label>Ring Finger</label>
+        <input type="range" id="curl_R" min="-0.3" max="1.3" step="0.02" value="0.28">
+        <span class="val" id="val_R">0.28</span>
+      </div>
+      <div class="slider-row">
+        <label>Pinky</label>
+        <input type="range" id="curl_P" min="-0.3" max="1.3" step="0.02" value="0.22">
+        <span class="val" id="val_P">0.22</span>
+      </div>
+    </div>
+
+    <!-- Quick Keystroke Tap Triggers -->
+    <div class="section-title">
+      <span>Interactive Keystrokes</span>
+      <span style="font-size:10px; color:#94a3b8;">Click key to strike</span>
+    </div>
+    <div class="box-group">
+      <div style="font-size:10.5px; color:#94a3b8; margin-bottom:4px;">Left Hand [ASDF] &amp; Right Hand [JKL;] Home Row:</div>
+      <div class="key-grid">
+        <button class="key-btn" data-key="A" data-side="L" data-finger="P">A [P]</button>
+        <button class="key-btn" data-key="S" data-side="L" data-finger="R">S [R]</button>
+        <button class="key-btn" data-key="D" data-side="L" data-finger="M">D [M]</button>
+        <button class="key-btn" data-key="F" data-side="L" data-finger="I">F [I]</button>
+        <button class="key-btn" data-key="G" data-side="L" data-finger="I">G [I]</button>
+      </div>
+      <div class="key-grid" style="margin-top:4px;">
+        <button class="key-btn" data-key="H" data-side="R" data-finger="I">H [I]</button>
+        <button class="key-btn" data-key="J" data-side="R" data-finger="I">J [I]</button>
+        <button class="key-btn" data-key="K" data-side="R" data-finger="M">K [M]</button>
+        <button class="key-btn" data-key="L" data-side="R" data-finger="R">L [R]</button>
+        <button class="key-btn" data-key=";" data-side="R" data-finger="P">; [P]</button>
+      </div>
+      <div class="key-grid" style="margin-top:4px;">
+        <button class="key-btn key-space" data-key="Space" data-side="R" data-finger="T">SPACEBAR [Right Thumb]</button>
+      </div>
+    </div>
+
+    <small style="color:#64748b; display:block; margin-top:8px;">
+      Orbit: Left-drag • Zoom: Scroll • Pan: Right-drag
+    </small>
+  </div>
+
+  <div id="loading">Loading Hands &amp; Armature Rig...</div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const loadingEl = document.getElementById('loading');
+
+    // ── Scene & Camera ──
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x070a10);
+
+    const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 16.5, 23);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.35;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.05;
+    controls.target.set(0, 0.2, -1.0);
+
+    // ── Studio Lighting ──
+    const hemiLight = new THREE.HemisphereLight(0xfff7ed, 0x1e293b, 1.45);
+    scene.add(hemiLight);
+
+    const keyLight = new THREE.DirectionalLight(0xffedd5, 2.2);
+    keyLight.position.set(6, 20, 14);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    keyLight.shadow.bias = -0.001;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x93c5fd, 0.9);
+    fillLight.position.set(-10, 12, -4);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0xf472b6, 0.45);
+    rimLight.position.set(0, -4, -8);
+    scene.add(rimLight);
+
+    // Desk Shadow Floor
+    const floorGeo = new THREE.PlaneGeometry(80, 80);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x0a101d, roughness: 0.85, metalness: 0.1 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.01;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Keyboard Guide Grid & Home-row Visualizer
+    const grid = new THREE.GridHelper(26, 26, 0x38bdf8, 0x1e293b);
+    grid.position.y = 0;
+    scene.add(grid);
+
+    // Virtual Keyboard Plate (Home Row Indicator)
+    const kbPlateGeo = new THREE.BoxGeometry(16, 0.08, 6.5);
+    const kbPlateMat = new THREE.MeshStandardMaterial({
+      color: 0x0f1829,
+      roughness: 0.7,
+      metalness: 0.2
+    });
+    const kbPlate = new THREE.Mesh(kbPlateGeo, kbPlateMat);
+    kbPlate.position.set(0, 0.04, -2.5);
+    kbPlate.receiveShadow = true;
+    scene.add(kbPlate);
+
+    // Center spacebar guideline
+    const spaceGeo = new THREE.BoxGeometry(7, 0.1, 1.2);
+    const spaceMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
+    const spaceMesh = new THREE.Mesh(spaceGeo, spaceMat);
+    spaceMesh.position.set(0, 0.08, -0.4);
+    scene.add(spaceMesh);
+
+    // ── Procedural PBR Skin Material ──
+    const skinMaterialL = new THREE.MeshStandardMaterial({
+      color: 0xdfa38f,
+      roughness: 0.55,
+      metalness: 0.03,
+      side: THREE.DoubleSide
+    });
+    const skinMaterialR = skinMaterialL.clone();
+
+    // Model root group
+    let handsRoot = null;
+    let skeletonHelper = null;
+    let activeChains = { L: {}, R: {} };
+    const initialRotations = new Map();
+
+    let showSkeleton = false;
+    let isAutoTyping = false;
+    let typingTimer = 0;
+    let isPalmDown = true;
+
+    let nodeLeft = null;
+    let nodeRight = null;
+    let meshL = null;
+    let meshR = null;
+
+    // Stance parameters
+    const stance = {
+      spacing: 1.6,      // Symmetrical hand spacing multiplier (closer)
+      scale: 7.8,        // Natural human scale spanning home row
+      pitch: -3,         // Tilt angle
+      height: 0.35,      // Y position above desk
+      curls: { T: 0.15, I: 0.30, M: 0.32, R: 0.28, P: 0.22 }
+    };
+
+    function updateHandTransforms() {
+      if (!handsRoot || !nodeLeft || !nodeRight) return;
+
+      const pitchRad = (stance.pitch * Math.PI) / 180;
+      handsRoot.scale.set(stance.scale, stance.scale, stance.scale);
+
+      // Symmetrically position Left Hand on left (-X) and Right Hand on right (+X)
+      const halfSpace = stance.spacing * 0.5;
+      nodeLeft.position.set(-halfSpace - 0.946, 0.01, -0.385);
+      nodeRight.position.set(halfSpace + 1.472, -0.01, -0.151);
+
+      if (isPalmDown) {
+        // ── FLIPPED: PALM DOWN (TYPING POSTURE) ──
+        // Rotate Y 180° so fingers point -Z (away into keyboard).
+        // Roll (Z) = PI flips forearm pronation so palms face DOWN, knuckles face UP!
+        handsRoot.rotation.order = 'YXZ';
+        handsRoot.rotation.y = Math.PI;
+        handsRoot.rotation.x = pitchRad;
+        handsRoot.rotation.z = Math.PI;
+        handsRoot.position.set(0, stance.height, 0.2);
+      } else {
+        // ── PALM UP (EXAMINATION POSE) ──
+        handsRoot.rotation.order = 'YXZ';
+        handsRoot.rotation.y = Math.PI;
+        handsRoot.rotation.x = pitchRad;
+        handsRoot.rotation.z = 0;
+        handsRoot.position.set(0, stance.height, 0.2);
+      }
+    }
+
+    const gltfLoader = new GLTFLoader();
+
+    function loadHandsAndArmature() {
+      loadingEl.style.display = 'block';
+
+      gltfLoader.load('./3D/hands_armature.glb', (gltf) => {
+        handsRoot = gltf.scene;
+
+        handsRoot.traverse((c) => {
+          if (c.isSkinnedMesh) {
+            c.castShadow = true;
+            c.receiveShadow = true;
+            if (c.name && c.name.includes('R')) {
+              c.material = skinMaterialR;
+              meshR = c;
+            } else {
+              c.material = skinMaterialL;
+              meshL = c;
+            }
+          }
+          if (c.isBone) {
+            initialRotations.set(c, { x: c.rotation.x, y: c.rotation.y, z: c.rotation.z });
+          }
+        });
+
+        nodeLeft = handsRoot.getObjectByName('Hand_Left');
+        nodeRight = handsRoot.getObjectByName('Hand_Right');
+
+        if (!nodeLeft || !nodeRight) {
+          console.error('Hand nodes not found in GLB');
+          return;
+        }
+
+        scene.add(handsRoot);
+
+        // Measure initial centers
+        const boxL = new THREE.Box3().setFromObject(nodeLeft);
+        const centerL = boxL.getCenter(new THREE.Vector3());
+        const boxR = new THREE.Box3().setFromObject(nodeRight);
+        const centerR = boxR.getCenter(new THREE.Vector3());
+
+        // Center each hand at its group origin
+        nodeLeft.position.sub(centerL);
+        nodeRight.position.sub(centerR);
+
+        // Store original centers
+        nodeLeft.userData.originOffset = centerL;
+        nodeRight.userData.originOffset = centerR;
+
+        // Map finger chains DIRECTLY by joint index in mesh.skeleton.bones
+        const bL = meshL ? meshL.skeleton.bones : [];
+        const bR = meshR ? meshR.skeleton.bones : [];
+
+        console.log('Skeleton bone counts: Left =', bL.length, 'Right =', bR.length);
+
+        activeChains = {
+          L: {
+            I: [bL[3], bL[4], bL[5]].filter(Boolean),   // Index MCP, PIP, DIP
+            M: [bL[7], bL[8], bL[9]].filter(Boolean),   // Middle MCP, PIP, DIP
+            R: [bL[11], bL[12], bL[13]].filter(Boolean), // Ring MCP, PIP, DIP
+            P: [bL[15], bL[16], bL[17]].filter(Boolean), // Pinky MCP, PIP, DIP
+            T: [bL[23], bL[24], bL[25]].filter(Boolean)  // Thumb MCP, IP, Tip
+          },
+          R: {
+            I: [bR[3], bR[4], bR[5]].filter(Boolean),   // Index MCP, PIP, DIP
+            M: [bR[7], bR[8], bR[9]].filter(Boolean),   // Middle MCP, PIP, DIP
+            R: [bR[11], bR[12], bR[13]].filter(Boolean), // Ring MCP, PIP, DIP
+            P: [bR[15], bR[16], bR[17]].filter(Boolean), // Pinky MCP, PIP, DIP
+            T: [bR[23], bR[24], bR[25]].filter(Boolean)  // Thumb MCP, IP, Tip
+          }
+        };
+
+        skeletonHelper = new THREE.SkeletonHelper(handsRoot);
+        skeletonHelper.visible = showSkeleton;
+        scene.add(skeletonHelper);
+
+        updateHandTransforms();
+        applyAllFingerCurls();
+
+        loadingEl.style.display = 'none';
+      });
+    }
+
+    loadHandsAndArmature();
+
+    // ── Apply Curls to Armature Bones ──
+    function applyFingerCurl(fKey, val) {
+      stance.curls[fKey] = val;
+      ['L', 'R'].forEach(side => {
+        const chains = activeChains[side];
+        if (!chains) return;
+        const bones = chains[fKey];
+        if (!bones) return;
+
+        bones.forEach((bone, idx) => {
+          if (!bone) return;
+          const init = initialRotations.get(bone);
+          if (!init) return;
+
+          // Downward curl around local X
+          const weight = (idx === 0 ? 0.45 : 0.85);
+          bone.rotation.x = init.x - val * weight;
+          bone.updateMatrix();
+        });
+      });
+    }
+
+    function applyAllFingerCurls() {
+      ['T', 'I', 'M', 'R', 'P'].forEach(fKey => {
+        applyFingerCurl(fKey, stance.curls[fKey]);
+      });
+    }
+
+    // ── Hand Stance & Placement Listeners ──
+    const spacingSlider = document.getElementById('spacingSlider');
+    const valSpacing = document.getElementById('val_spacing');
+    spacingSlider.oninput = (e) => {
+      stance.spacing = parseFloat(e.target.value);
+      valSpacing.innerText = stance.spacing.toFixed(2);
+      updateHandTransforms();
+    };
+
+    const scaleSlider = document.getElementById('scaleSlider');
+    const valScale = document.getElementById('val_scale');
+    scaleSlider.oninput = (e) => {
+      stance.scale = parseFloat(e.target.value);
+      valScale.innerText = stance.scale.toFixed(1);
+      updateHandTransforms();
+    };
+
+    const pitchSlider = document.getElementById('pitchSlider');
+    const valPitch = document.getElementById('val_pitch');
+    pitchSlider.oninput = (e) => {
+      stance.pitch = parseFloat(e.target.value);
+      valPitch.innerText = stance.pitch + '°';
+      updateHandTransforms();
+    };
+
+    const heightSlider = document.getElementById('heightSlider');
+    const valHeight = document.getElementById('val_height');
+    heightSlider.oninput = (e) => {
+      stance.height = parseFloat(e.target.value);
+      valHeight.innerText = stance.height.toFixed(2);
+      updateHandTransforms();
+    };
+
+    // Flip Palms Button
+    const btnFlip = document.getElementById('btnFlipHands');
+    const stanceLabel = document.getElementById('stanceLabel');
+    btnFlip.onclick = () => {
+      isPalmDown = !isPalmDown;
+      stanceLabel.innerText = isPalmDown ? 'Palms Down (Typing)' : 'Palms Up (Examining)';
+      stanceLabel.style.color = isPalmDown ? '#4ade80' : '#38bdf8';
+      btnFlip.classList.toggle('btn-green', isPalmDown);
+      btnFlip.classList.toggle('btn-purple', !isPalmDown);
+      updateHandTransforms();
+    };
+
+    // Reset Wrist Stance
+    document.getElementById('btnResetPose').onclick = () => {
+      stance.spacing = 1.6;
+      stance.scale = 7.8;
+      stance.pitch = -3;
+      stance.height = 0.35;
+      spacingSlider.value = 1.6; valSpacing.innerText = '1.60';
+      scaleSlider.value = 7.8; valScale.innerText = '7.8';
+      pitchSlider.value = -3; valPitch.innerText = '-3°';
+      heightSlider.value = 0.35; valHeight.innerText = '0.35';
+      updateHandTransforms();
+    };
+
+    // Relaxed Arch Button
+    document.getElementById('btnRelaxHands').onclick = () => {
+      const relaxed = { T: 0.15, I: 0.30, M: 0.32, R: 0.28, P: 0.22 };
+      Object.assign(stance.curls, relaxed);
+      ['T', 'I', 'M', 'R', 'P'].forEach(k => {
+        const sl = document.getElementById(`curl_${k}`);
+        const vl = document.getElementById(`val_${k}`);
+        if (sl) sl.value = relaxed[k];
+        if (vl) vl.innerText = relaxed[k].toFixed(2);
+      });
+      applyAllFingerCurls();
+    };
+
+    // Master Curl Slider
+    const masterSlider = document.getElementById('curl_ALL');
+    const valAll = document.getElementById('val_ALL');
+    masterSlider.oninput = (e) => {
+      const val = parseFloat(e.target.value);
+      valAll.innerText = val.toFixed(2);
+      ['T', 'I', 'M', 'R', 'P'].forEach(fKey => {
+        const factor = fKey === 'T' ? 0.7 : (fKey === 'M' ? 1.05 : 1.0);
+        const curVal = +(val * factor).toFixed(2);
+        stance.curls[fKey] = curVal;
+        const sl = document.getElementById(`curl_${fKey}`);
+        const vl = document.getElementById(`val_${fKey}`);
+        if (sl) sl.value = curVal;
+        if (vl) vl.innerText = curVal.toFixed(2);
+      });
+      applyAllFingerCurls();
+    };
+
+    // Individual Finger Curl Sliders
+    ['T', 'I', 'M', 'R', 'P'].forEach(fKey => {
+      const slider = document.getElementById(`curl_${fKey}`);
+      const valLabel = document.getElementById(`val_${fKey}`);
+      if (!slider) return;
+      slider.oninput = (e) => {
+        const val = parseFloat(e.target.value);
+        if (valLabel) valLabel.innerText = val.toFixed(2);
+        applyFingerCurl(fKey, val);
+      };
+    });
+
+    // Hand Visibility Toggles
+    const btnBoth = document.getElementById('toggleBoth');
+    const btnLeftOnly = document.getElementById('toggleLeftOnly');
+    const btnRightOnly = document.getElementById('toggleRightOnly');
+
+    btnBoth.onclick = () => {
+      if (nodeLeft) nodeLeft.visible = true;
+      if (nodeRight) nodeRight.visible = true;
+      btnBoth.className = 'btn btn-active';
+      btnLeftOnly.className = 'btn btn-secondary';
+      btnRightOnly.className = 'btn btn-secondary';
+    };
+
+    btnLeftOnly.onclick = () => {
+      if (nodeLeft) nodeLeft.visible = true;
+      if (nodeRight) nodeRight.visible = false;
+      btnBoth.className = 'btn btn-secondary';
+      btnLeftOnly.className = 'btn btn-active';
+      btnRightOnly.className = 'btn btn-secondary';
+    };
+
+    btnRightOnly.onclick = () => {
+      if (nodeLeft) nodeLeft.visible = false;
+      if (nodeRight) nodeRight.visible = true;
+      btnBoth.className = 'btn btn-secondary';
+      btnLeftOnly.className = 'btn btn-secondary';
+      btnRightOnly.className = 'btn btn-active';
+    };
+
+    // Skeleton Toggle
+    const btnSkeleton = document.getElementById('toggleSkeleton');
+    btnSkeleton.onclick = () => {
+      showSkeleton = !showSkeleton;
+      btnSkeleton.classList.toggle('btn-active', showSkeleton);
+      if (skeletonHelper) skeletonHelper.visible = showSkeleton;
+    };
+
+    // ── Interactive Keystroke Trigger System ──
+    const activeKeystrokes = [];
+
+    function triggerKeystroke(side, fKey, btnElement) {
+      if (btnElement) {
+        btnElement.classList.add('pressed');
+        setTimeout(() => btnElement.classList.remove('pressed'), 180);
+      }
+
+      activeKeystrokes.push({
+        side,
+        fKey,
+        progress: 0,
+        speed: 0.12
+      });
+    }
+
+    document.querySelectorAll('.key-btn').forEach(btn => {
+      btn.onclick = () => {
+        const side = btn.dataset.side;
+        const finger = btn.dataset.finger;
+        triggerKeystroke(side, finger, btn);
+      };
+    });
+
+    // Typing Demo Toggle
+    const btnTyping = document.getElementById('toggleTypingAnim');
+    btnTyping.onclick = () => {
+      isAutoTyping = !isAutoTyping;
+      btnTyping.innerText = isAutoTyping ? '⏹ Stop Demo' : '▶ Typing Demo';
+      btnTyping.classList.toggle('btn-active', isAutoTyping);
+      if (!isAutoTyping) {
+        applyAllFingerCurls();
+      }
+    };
+
+    const strokeSequence = [
+      { side: 'L', fKey: 'I', key: 'F' },
+      { side: 'R', fKey: 'I', key: 'J' },
+      { side: 'L', fKey: 'M', key: 'D' },
+      { side: 'R', fKey: 'M', key: 'K' },
+      { side: 'L', fKey: 'R', key: 'S' },
+      { side: 'R', fKey: 'T', key: 'Space' }
+    ];
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // ── Animation Loop ──
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Handle interactive keystroke strikes
+      for (let i = activeKeystrokes.length - 1; i >= 0; i--) {
+        const ks = activeKeystrokes[i];
+        ks.progress += ks.speed;
+        const strikeOffset = Math.sin(ks.progress * Math.PI) * 0.45;
+
+        const bones = activeChains[ks.side] ? activeChains[ks.side][ks.fKey] : null;
+        if (bones) {
+          const baseCurl = stance.curls[ks.fKey];
+          bones.forEach((bone, idx) => {
+            const init = initialRotations.get(bone);
+            if (init) {
+              const weight = idx === 0 ? 0.4 : 0.9;
+              bone.rotation.x = init.x - (baseCurl + strikeOffset) * weight;
+            }
+          });
+        }
+
+        if (ks.progress >= 1) {
+          applyFingerCurl(ks.fKey, stance.curls[ks.fKey]);
+          activeKeystrokes.splice(i, 1);
+        }
+      }
+
+      // Handle auto typing demo
+      if (isAutoTyping && activeChains.L && activeChains.L.I) {
+        typingTimer += 0.05;
+        const seqIndex = Math.floor(typingTimer * 1.5) % strokeSequence.length;
+        const phase = (typingTimer * 1.5) % 1;
+        const tapCurl = Math.sin(phase * Math.PI) * 0.4;
+
+        const activeStroke = strokeSequence[seqIndex];
+        const tappingBones = activeChains[activeStroke.side] ? activeChains[activeStroke.side][activeStroke.fKey] : null;
+
+        if (tappingBones) {
+          const baseCurl = stance.curls[activeStroke.fKey];
+          tappingBones.forEach((bone, idx) => {
+            const init = initialRotations.get(bone);
+            if (init) {
+              const weight = idx === 0 ? 0.35 : 0.85;
+              bone.rotation.x = init.x - (baseCurl + tapCurl) * weight;
+            }
+          });
+        }
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>

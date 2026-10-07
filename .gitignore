@@ -1,0 +1,62 @@
+# ==============================================================================
+# KeyVibe Studio - Git Ignore Rules
+# ==============================================================================
+
+# Dependencies
+node_modules/
+
+# Environment Variables & Local Secrets
+.env
+.env.local
+.env.*.local
+
+# Python Cache & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# IDE & Editor Artifacts
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# Logs & Debug Output
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Large Deprecated 3D Model Binaries (>50MB / GitHub 100MB Hard Limit Safeguard)
+depricated/3D/*.obj
+depricated/3D/*.blend
+depricated/3D/*.glb
+depricated/screenshots/
+
+# Temporary / Scratch Files
+dom_output.html
+scratch/
+.system_generated/
+.gemini/
