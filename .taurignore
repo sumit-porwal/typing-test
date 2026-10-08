@@ -1,0 +1,14 @@
+# Tauri asset ignore rules
+node_modules/
+src-tauri/
+.git/
+.vercel/
+depricated/
+package-lock.json
+*.bat
+server.py
+*.log
+.gitignore
+.vercelignore
+netlify.toml
+vercel.json

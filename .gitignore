@@ -65,3 +65,7 @@ scratch/
 .gemini/
 
 .vercel
+
+# Tauri Build Artifacts
+src-tauri/target/
+src-tauri/gen/

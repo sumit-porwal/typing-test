@@ -142,5 +142,47 @@ CMD ["nginx", "-g", "daemon off;"]
 
 ---
 
+## 💻 Desktop Application (Windows & Linux)
+
+KeyVibe is powered by **Tauri v2** to run natively as a high-performance Windows & Linux desktop application.
+
+### 🚀 Running Locally
+
+#### On Windows:
+- **Option 1 (One-Click):** Double-click [run-desktop.bat](file:///c:/Dev/typing%20test/run-desktop.bat)
+- **Option 2 (Terminal):**
+  ```powershell
+  npm run tauri:dev
+  ```
+
+#### On Linux:
+  ```bash
+  # Install prerequisites (Ubuntu / Debian):
+  sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+  npm run tauri:dev
+  ```
+
+### 📦 Building Native Installers
+
+#### Windows (.exe installer & standalone binary):
+- **Option 1 (One-Click):** Double-click [build-desktop.bat](file:///c:/Dev/typing%20test/build-desktop.bat)
+- **Option 2 (Terminal):**
+  ```powershell
+  npm run tauri:build
+  ```
+  The compiled `.exe` and NSIS installer will be located in `src-tauri/target/release/`.
+
+#### Linux (.deb package & .AppImage):
+- Run the build script:
+  ```bash
+  bash scripts/build-linux.sh
+  ```
+  Packages are generated in `src-tauri/target/release/bundle/`.
+
+#### Automated CI/CD (GitHub Actions):
+Whenever code is pushed or tagged with a release tag (e.g. `v1.0.0`), [.github/workflows/desktop-release.yml](file:///c:/Dev/typing%20test/.github/workflows/desktop-release.yml) automatically builds native installers for **both Windows and Linux** and publishes them as downloadable release artifacts.
+
+---
+
 ## 📄 License
 This project is licensed under the [MIT License](LICENSE).

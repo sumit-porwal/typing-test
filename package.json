@@ -7,6 +7,10 @@
     "start": "python server.py 3000",
     "dev": "python server.py 3000",
     "serve": "npx serve -p 3000 .",
+    "build": "node scripts/prepare-dist.js",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
     "test": "node -c js/app.js js/audio.js js/handOverlay.js js/hands.js js/keyboard.js js/lessons.js js/tts.js js/metrics.js js/settingsManager.js js/academyManager.js js/resultsModal.js"
   },
   "keywords": [
