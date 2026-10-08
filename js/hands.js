@@ -120,4 +120,21 @@ export class VirtualHands {
       this.coachStatusTag.className = `dock-tag status-${type}`;
     }
   }
+
+  setFinishedState() {
+    this.setStatusTag('COMPLETE!', 'complete');
+    if (this.targetKeyHero) {
+      this.targetKeyHero.textContent = '↺';
+    }
+    if (this.fingerColorDot) {
+      this.fingerColorDot.style.backgroundColor = '#10b981';
+      this.fingerColorDot.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.6)';
+    }
+    if (this.fingerNameText) {
+      this.fingerNameText.textContent = 'Test Finished';
+    }
+    if (this.targetHintText) {
+      this.targetHintText.textContent = 'Press any key or Space to start next test (or press Tab + Enter)';
+    }
+  }
 }

@@ -39,6 +39,28 @@ export class SettingsManager {
       if (savedKb !== null) this.showKeyboard = (savedKb === 'true');
     } catch (_) { }
 
+    // Hands Mode ('full', 'active', 'off')
+    this.handsMode = 'full';
+    try {
+      const savedHandsMode = localStorage.getItem('keyvibe_hands_mode');
+      if (savedHandsMode && ['full', 'active', 'off'].includes(savedHandsMode)) {
+        this.handsMode = savedHandsMode;
+      }
+    } catch (_) { }
+
+    // Hand Overlay Transparency & Thickness
+    this.handOpacity = 0.58;
+    try {
+      const savedOp = localStorage.getItem('keyvibe_hand_opacity');
+      if (savedOp) this.handOpacity = parseFloat(savedOp);
+    } catch (_) { }
+
+    this.handThickness = 1.0;
+    try {
+      const savedThick = localStorage.getItem('keyvibe_hand_thickness');
+      if (savedThick) this.handThickness = parseFloat(savedThick);
+    } catch (_) { }
+
     // Words Configuration
     this.wordCount = 25;
     this.timeLimit = 0; // 0 for word sprint, or 15/30/60 for countdown
@@ -62,6 +84,7 @@ export class SettingsManager {
     this.syncSoundUI();
     this.syncVoiceUI();
     this.syncCursorUI();
+    this.syncHandsUI();
     this.applyKeyboardSettings();
     this.syncHandSettingsUI();
     this.syncWordsSettingsUI();
@@ -250,7 +273,9 @@ export class SettingsManager {
     if (handOpacitySlider) {
       handOpacitySlider.addEventListener('input', (e) => {
         const val = parseInt(e.target.value, 10);
-        if (this.app.overlay) this.app.overlay.setOpacity(val / 100);
+        this.handOpacity = val / 100;
+        try { localStorage.setItem('keyvibe_hand_opacity', String(this.handOpacity)); } catch (_) {}
+        if (this.app.overlay) this.app.overlay.setOpacity(this.handOpacity);
         const badge = document.getElementById('val-hand-opacity');
         if (badge) badge.textContent = `${val}%`;
       });
@@ -260,7 +285,9 @@ export class SettingsManager {
     if (handThicknessSlider) {
       handThicknessSlider.addEventListener('input', (e) => {
         const val = parseInt(e.target.value, 10);
-        if (this.app.overlay) this.app.overlay.setThickness(val / 100);
+        this.handThickness = val / 100;
+        try { localStorage.setItem('keyvibe_hand_thickness', String(this.handThickness)); } catch (_) {}
+        if (this.app.overlay) this.app.overlay.setThickness(this.handThickness);
         const badge = document.getElementById('val-hand-thickness');
         if (badge) badge.textContent = `${val}%`;
       });
@@ -269,11 +296,7 @@ export class SettingsManager {
     const toggleHandsBtn = document.getElementById('btn-toggle-hands');
     if (toggleHandsBtn) {
       toggleHandsBtn.addEventListener('click', () => {
-        if (!this.showKeyboard) return;
-        const isEnabled = this.app.overlay ? this.app.overlay.toggleOverlay() : true;
-        toggleHandsBtn.classList.toggle('active', isEnabled);
-        const handsRoom = document.querySelector('.hands-room');
-        if (handsRoom) handsRoom.classList.toggle('collapsed', !isEnabled);
+        this.cycleHandsMode();
       });
     }
 
@@ -367,8 +390,8 @@ export class SettingsManager {
     };
 
     const toggleBtn = document.getElementById('btn-toggle-voice');
-    const toggleIcon = document.getElementById('voice-toggle-icon');
     const toggleLabel = document.getElementById('voice-toggle-label');
+    const voiceBadge = document.getElementById('voice-mode-badge');
     if (toggleBtn) {
       toggleBtn.classList.toggle('active', isEnabled);
       toggleBtn.classList.toggle('off', !isEnabled);
@@ -377,8 +400,10 @@ export class SettingsManager {
         ? `Voice Coach: ${modeLabels[mode] || mode} mode (Click to mute, Shift+Click to cycle) [Alt+V]`
         : 'Voice Coach: Muted (Click to enable, Shift+Click to cycle) [Alt+V]';
     }
-    if (toggleIcon) toggleIcon.textContent = modeIcons[mode] || (isEnabled ? '🗣️' : '🔇');
-    if (toggleLabel) toggleLabel.textContent = isEnabled ? (modeLabels[mode] || 'Coach') : 'Voice Off';
+    if (toggleLabel) toggleLabel.textContent = 'Coach';
+    if (voiceBadge) {
+      voiceBadge.textContent = isEnabled ? (mode === 'coach' ? 'FULL' : mode.toUpperCase()) : 'OFF';
+    }
 
     const settingToggleBtn = document.getElementById('btn-setting-voice-toggle');
     const settingToggleIcon = document.getElementById('setting-voice-toggle-icon');
@@ -427,16 +452,15 @@ export class SettingsManager {
   syncCursorUI() {
     const style = this.cursorStyle;
     const styleLabels = { line: 'Line', block: 'Block', underline: 'Underline', outline: 'Outline' };
-    const styleIcons = { line: '|', block: '█', underline: '_', outline: '▢' };
 
     const toggleBtn = document.getElementById('btn-toggle-cursor');
-    const toggleIcon = document.getElementById('cursor-toggle-icon');
     const toggleLabel = document.getElementById('cursor-toggle-label');
+    const cursorBadge = document.getElementById('cursor-mode-badge');
 
-    if (toggleIcon) toggleIcon.textContent = styleIcons[style] || '|';
-    if (toggleLabel) toggleLabel.textContent = styleLabels[style] || 'Line';
+    if (toggleLabel) toggleLabel.textContent = 'Caret';
+    if (cursorBadge) cursorBadge.textContent = style.toUpperCase();
     if (toggleBtn) {
-      toggleBtn.title = `Cursor Style: ${styleLabels[style]} (Click to cycle)`;
+      toggleBtn.title = `Cursor Style: ${styleLabels[style]} (Click to cycle Line, Block, Underline, Outline)`;
     }
 
     const presets = document.getElementById('cursor-presets');
@@ -484,22 +508,25 @@ export class SettingsManager {
   }
 
   syncHandSettingsUI() {
-    if (this.app.overlay) {
-      const opacitySlider = document.getElementById('slider-hand-opacity');
-      const opacityVal = document.getElementById('val-hand-opacity');
-      if (opacitySlider) {
-        const pct = Math.round(this.app.overlay.opacity * 100);
-        opacitySlider.value = pct;
-        if (opacityVal) opacityVal.textContent = `${pct}%`;
-      }
+    const opacitySlider = document.getElementById('slider-hand-opacity');
+    const opacityVal = document.getElementById('val-hand-opacity');
+    if (opacitySlider) {
+      const pct = Math.round(this.handOpacity * 100);
+      opacitySlider.value = pct;
+      if (opacityVal) opacityVal.textContent = `${pct}%`;
+    }
 
-      const thicknessSlider = document.getElementById('slider-hand-thickness');
-      const thicknessVal = document.getElementById('val-hand-thickness');
-      if (thicknessSlider) {
-        const pct = Math.round((this.app.overlay.handScale || 1.0) * 100);
-        thicknessSlider.value = pct;
-        if (thicknessVal) thicknessVal.textContent = `${pct}%`;
-      }
+    const thicknessSlider = document.getElementById('slider-hand-thickness');
+    const thicknessVal = document.getElementById('val-hand-thickness');
+    if (thicknessSlider) {
+      const pct = Math.round((this.handThickness || 1.0) * 100);
+      thicknessSlider.value = pct;
+      if (thicknessVal) thicknessVal.textContent = `${pct}%`;
+    }
+
+    if (this.app.overlay) {
+      this.app.overlay.setOpacity(this.handOpacity);
+      this.app.overlay.setThickness(this.handThickness);
     }
 
     const themeSelect = document.getElementById('select-kb-theme');
@@ -573,6 +600,12 @@ export class SettingsManager {
     } catch (_) { }
 
     this.syncKeyboardVisibilityUI();
+    setTimeout(() => {
+      if (this.app && this.app._updateCaretPosition) {
+        this.app._updateCaretPosition();
+      }
+    }, 60);
+
     if (this.showKeyboard) {
       this.app.showToast('⌨️ Virtual Keyboard Visible');
     } else {
@@ -580,12 +613,63 @@ export class SettingsManager {
     }
   }
 
+  cycleHandsMode() {
+    if (!this.showKeyboard) return;
+    const modes = ['full', 'active', 'off'];
+    const curIdx = modes.indexOf(this.handsMode);
+    const nextMode = modes[(curIdx + 1) % modes.length];
+    this.setHandsMode(nextMode);
+  }
+
+  setHandsMode(mode) {
+    if (!['full', 'active', 'off'].includes(mode)) return;
+    this.handsMode = mode;
+    try {
+      localStorage.setItem('keyvibe_hands_mode', mode);
+    } catch (_) { }
+    if (this.app.overlay) {
+      this.app.overlay.setMode(mode);
+    }
+    this.syncHandsUI();
+    const modeLabels = { full: 'Full Hands', active: 'Active Finger Only', off: 'Hands Off' };
+    this.app.showToast(`🖐️ Hands: ${modeLabels[mode] || mode}`);
+  }
+
+  syncHandsUI() {
+    const handsBtn = document.getElementById('btn-toggle-hands');
+    const badge = document.getElementById('hands-mode-badge');
+    const handsRoom = document.querySelector('.hands-room');
+    const isOff = (this.handsMode === 'off' || !this.showKeyboard);
+
+    if (handsBtn) {
+      handsBtn.classList.toggle('active', !isOff);
+      handsBtn.setAttribute('aria-pressed', String(!isOff));
+      handsBtn.dataset.handMode = this.handsMode;
+      handsBtn.title = this.showKeyboard
+        ? `Hands Overlay: ${this.handsMode.toUpperCase()} (Click to cycle Full / Active finger only / Off)`
+        : 'Hands overlay unavailable while keyboard is hidden';
+    }
+
+    if (badge) {
+      badge.textContent = this.showKeyboard ? this.handsMode.toUpperCase() : 'OFF';
+    }
+
+    if (handsRoom) {
+      handsRoom.classList.toggle('collapsed', isOff);
+    }
+
+    if (this.app.overlay) {
+      this.app.overlay.setMode(this.showKeyboard ? this.handsMode : 'off');
+    }
+  }
+
   syncKeyboardVisibilityUI() {
     const kbSection = document.querySelector('.keyboard-section');
-    const handsRoom = document.querySelector('.hands-room');
     const kbToggleBtn = document.getElementById('btn-toggle-keyboard');
-    const handsBtn = document.getElementById('btn-toggle-hands');
+    const kbBadge = document.getElementById('kb-mode-badge');
     const settingKbBtn = document.getElementById('btn-setting-kb-toggle');
+
+    document.body.classList.toggle('keyboard-hidden', !this.showKeyboard);
 
     if (kbSection) {
       kbSection.classList.toggle('hidden', !this.showKeyboard);
@@ -594,6 +678,11 @@ export class SettingsManager {
     if (kbToggleBtn) {
       kbToggleBtn.classList.toggle('active', this.showKeyboard);
       kbToggleBtn.setAttribute('aria-pressed', String(this.showKeyboard));
+      kbToggleBtn.title = `Keyboard (Alt+K) — Currently ${this.showKeyboard ? 'ON' : 'OFF'}`;
+    }
+
+    if (kbBadge) {
+      kbBadge.textContent = this.showKeyboard ? 'ON' : 'OFF';
     }
 
     if (settingKbBtn) {
@@ -601,26 +690,7 @@ export class SettingsManager {
       settingKbBtn.textContent = this.showKeyboard ? 'VISIBLE' : 'HIDDEN';
     }
 
-    if (handsBtn) {
-      handsBtn.classList.toggle('disabled', !this.showKeyboard);
-      handsBtn.title = this.showKeyboard
-        ? 'Toggle realistic hand overlay on keyboard'
-        : 'Hands overlay unavailable while keyboard is hidden';
-    }
-
-    if (handsRoom) {
-      const handsActive = handsBtn && handsBtn.classList.contains('active');
-      handsRoom.classList.toggle('collapsed', !this.showKeyboard || !handsActive);
-    }
-
-    if (!this.showKeyboard) {
-      if (this.app.overlay && this.app.overlay.svg) this.app.overlay.svg.style.display = 'none';
-    } else {
-      if (this.app.overlay && this.app.overlay.svg) {
-        this.app.overlay.svg.style.display = this.app.overlay.isEnabled ? 'block' : 'none';
-        this.app.overlay.updatePositions(true);
-      }
-    }
+    this.syncHandsUI();
   }
 
   syncWordsSettingsUI() {

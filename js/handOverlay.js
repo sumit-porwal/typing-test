@@ -15,6 +15,7 @@ export class HandOverlay {
     this.shiftFingerId = null;
     this.targetKeyId = 'KeyF';
     this.isEnabled = true;
+    this.mode = 'full';     // 'full', 'active', 'off'
     this.animFrame = null;
     this.boardWidth = 0;
     this.boardHeight = 0;
@@ -22,15 +23,16 @@ export class HandOverlay {
     this.keyH = 40;
 
     // ---- Tuning knobs ----
-    this.opacity = 0.5;     // 0.35 = ghostly, 0.8 = nearly solid
+    this.opacity = 0.58;    // 0.58 = realistic translucent skin
     this.handScale = 1;     // make the whole hand bigger / smaller
 
     this.skin = {
       base: '#efc9b5',
       shade: '#c99a86',
       light: '#fbe6da',
-      line: '#a8705a',
-      outline: '#9a6f60'
+      line: '#9e6750',
+      outline: '#8c5542',
+      edge: '#7d4534'
     };
 
     // hx/hy = home position, x/y = current, tx/ty = target
@@ -55,7 +57,7 @@ export class HandOverlay {
     // Distance from home-row fingertip down to the knuckle (hand units)
     this.dropMap = { pinky: 1.35, ring: 1.65, middle: 1.8, index: 1.6 };
     // Longest a finger can stretch when reaching (hand units)
-    this.maxLenMap = { pinky: 2.1, ring: 2.5, middle: 2.7, index: 2.5 };
+    this.maxLenMap = { pinky: 2.4, ring: 2.8, middle: 3.0, index: 2.8 };
   }
 
   get _U() { return this.keyW * this.handScale; }
@@ -91,34 +93,39 @@ export class HandOverlay {
   _renderDefs() {
     this.svg.innerHTML = `
       <defs>
-        <radialGradient id="palmLeft" cx="40%" cy="25%" r="85%">
-          <stop offset="0%" stop-color="#f8dccb"/>
+        <linearGradient id="dorsalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#efc9b5"/>
           <stop offset="55%" stop-color="#efc9b5"/>
-          <stop offset="100%" stop-color="#d9a68f"/>
-        </radialGradient>
-        <radialGradient id="palmRight" cx="60%" cy="25%" r="85%">
-          <stop offset="0%" stop-color="#f8dccb"/>
-          <stop offset="55%" stop-color="#efc9b5"/>
-          <stop offset="100%" stop-color="#d9a68f"/>
-        </radialGradient>
+          <stop offset="100%" stop-color="#dfaf98"/>
+        </linearGradient>
         <linearGradient id="nailGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stop-color="#fff5ee"/>
           <stop offset="100%" stop-color="#f3d3bd"/>
+        </linearGradient>
+        <linearGradient id="activeFingerGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.34"/>
+          <stop offset="65%" stop-color="#0284c7" stop-opacity="0.18"/>
+          <stop offset="100%" stop-color="#0369a1" stop-opacity="0.05"/>
+        </linearGradient>
+        <linearGradient id="shiftFingerGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#f472b6" stop-opacity="0.34"/>
+          <stop offset="65%" stop-color="#db2777" stop-opacity="0.18"/>
+          <stop offset="100%" stop-color="#be185d" stop-opacity="0.05"/>
         </linearGradient>
         <filter id="handBlur" x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="7"/>
         </filter>
         <filter id="softEdge" x="-10%" y="-10%" width="120%" height="120%">
-          <feGaussianBlur stdDeviation="1.2"/>
+          <feGaussianBlur stdDeviation="1.0"/>
         </filter>
         <filter id="glowBlur" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="4"/>
+          <feGaussianBlur stdDeviation="3.5"/>
         </filter>
 
         <!-- Fades the wrists out below the keyboard -->
         <linearGradient id="fadeGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="100">
-          <stop offset="0" stop-color="#fff"/>
-          <stop offset="0.5" stop-color="#9a9a9a"/>
+          <stop offset="0%" stop-color="#fff"/>
+          <stop offset="0.6" stop-color="#a0a0a0"/>
           <stop offset="1" stop-color="#000"/>
         </linearGradient>
         <mask id="handFade" maskUnits="userSpaceOnUse" x="-3000" y="-3000" width="9000" height="9000">
@@ -137,6 +144,16 @@ export class HandOverlay {
     return this.isEnabled;
   }
 
+  setMode(mode) {
+    if (!['full', 'active', 'off'].includes(mode)) return;
+    this.mode = mode;
+    this.isEnabled = (mode !== 'off');
+    if (this.svg) {
+      this.svg.style.display = this.isEnabled ? 'block' : 'none';
+    }
+    this._draw();
+  }
+
   setOpacity(val) {
     this.opacity = Math.max(0.05, Math.min(1.0, val));
     this._draw();
@@ -144,7 +161,7 @@ export class HandOverlay {
 
   setThickness(val) {
     this.handScale = Math.max(0.6, Math.min(1.6, val));
-    this._draw();
+    this.updatePositions(true);
   }
 
   /* ------------------------------------------------------------------ */
@@ -197,9 +214,10 @@ export class HandOverlay {
     Object.keys(this.fingers).forEach(id => {
       const f = this.fingers[id];
 
-      let hfx = 0.5, hfy = 0.5;
-      if (f.isLeftSpace) { hfx = 0.35; hfy = 0.4; }
-      if (f.isRightSpace) { hfx = 0.65; hfy = 0.4; }
+      // Fingertips rest centered in keycap dish (0.50 X, 0.44 Y)
+      let hfx = 0.5, hfy = 0.44;
+      if (f.isLeftSpace) { hfx = 0.35; hfy = 0.42; }
+      if (f.isRightSpace) { hfx = 0.65; hfy = 0.42; }
       const home = this._keyPoint(board, boardRect, f.homeCode, hfx, hfy);
       if (home) { f.hx = home.x; f.hy = home.y; }
 
@@ -208,14 +226,14 @@ export class HandOverlay {
 
       if (id === this.activeFingerId && this.targetKeyId) {
         targetCode = this.targetKeyId;
-        fx = 0.5; fy = 0.5;
+        fx = 0.5; fy = 0.44;
         if (targetCode === 'Space') {
           fx = f.isLeftSpace ? 0.35 : 0.65;
-          fy = 0.4;
+          fy = 0.42;
         }
       } else if (id === this.shiftFingerId) {
         targetCode = id === 'LP' ? 'ShiftLeft' : 'ShiftRight';
-        fx = 0.5; fy = 0.5;
+        fx = 0.5; fy = 0.44;
       }
 
       let pt = this._keyPoint(board, boardRect, targetCode, fx, fy);
@@ -322,11 +340,30 @@ export class HandOverlay {
     return d + ' Z';
   }
 
+  // Open smooth path (sides and tip without closing across knuckle base)
+  _smoothOpen(pts, k = 1) {
+    const n = pts.length;
+    if (n < 2) return '';
+    let d = `M ${this._f(pts[0].x)} ${this._f(pts[0].y)}`;
+    for (let i = 0; i < n - 1; i++) {
+      const p0 = pts[Math.max(0, i - 1)];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[Math.min(n - 1, i + 2)];
+      const c1x = p1.x + ((p2.x - p0.x) / 6) * k;
+      const c1y = p1.y + ((p2.y - p0.y) / 6) * k;
+      const c2x = p2.x - ((p3.x - p1.x) / 6) * k;
+      const c2y = p2.y - ((p3.y - p1.y) / 6) * k;
+      d += ` C ${this._f(c1x)} ${this._f(c1y)}, ${this._f(c2x)} ${this._f(c2y)}, ${this._f(p2.x)} ${this._f(p2.y)}`;
+    }
+    return d;
+  }
+
   _polyline(pts) {
     return pts.map((p, i) => `${i ? 'L' : 'M'} ${this._f(p.x)} ${this._f(p.y)}`).join(' ');
   }
 
-  // A finger: curved, tapered tube from knuckle to fingertip with a rounded end
+  // A finger: smooth, tapered tube from knuckle to fingertip with a rounded end
   _fingerGeom(id, knuckle, tip, side) {
     const f = this.fingers[id];
     const isThumb = f.name === 'thumb';
@@ -337,21 +374,22 @@ export class HandOverlay {
     const d = Math.hypot(dx, dy) || 1;
     const ux = dx / d, uy = dy / d;
 
-    // Pull the curve back so the rounded cap finishes just past the key centre
-    const end = { x: tip.x - ux * r * 0.55, y: tip.y - uy * r * 0.55 };
+    // The thumb is chunky at the base and tapers toward the tip
+    const rStart = isThumb ? 1.08 : 1.0;
+    const rEnd = isThumb ? 0.78 : 0.82;
 
-    // Fingers bow slightly outward (away from the other hand) and the tip
-    // sweeps back in, like a relaxed typing curl. Thumb bows a bit more.
+    // Pull centerline end back by (r * rEnd) so the forward apex of the
+    // rounded cap (radius r * rEnd) lands precisely on tip.x, tip.y
+    const end = { x: tip.x - ux * (r * rEnd), y: tip.y - uy * (r * rEnd) };
+
+    // Relaxed curve: thumb has a gentle natural sweep toward spacebar;
+    // typing fingers extend straight toward their target key without lateral banana distortion
     const outward = side === 'left' ? -1 : 1;
-    const curl = d * (isThumb ? 0.12 : 0.05) * outward;
+    const curl = isThumb ? d * 0.08 * outward : 0;
     const ctrl = {
       x: (knuckle.x + end.x) / 2 + -uy * curl,
       y: (knuckle.y + end.y) / 2 + ux * curl
     };
-
-    // The thumb is chunky at the base and tapers more toward the tip
-    const rStart = isThumb ? 1.1 : 1;
-    const rEnd = isThumb ? 0.8 : 0.84;
 
     const N = 12;
     const cs = [];
@@ -366,6 +404,13 @@ export class HandOverlay {
       cs.push({ x: px, y: py, tx, ty, nx: -ty, ny: tx, r: r * (rStart + (rEnd - rStart) * t) });
     }
 
+    // Ensure terminal slice is oriented directly along reach direction (ux, uy)
+    // so cap apex and nail are perfectly centered on the target key
+    cs[N].tx = ux;
+    cs[N].ty = uy;
+    cs[N].nx = -uy;
+    cs[N].ny = ux;
+
     // Outline polygon: left side, rounded cap, right side
     const left = cs.map(c => ({ x: c.x + c.nx * c.r, y: c.y + c.ny * c.r }));
     const e = cs[N];
@@ -378,10 +423,12 @@ export class HandOverlay {
       });
     }
     const right = cs.slice().reverse().map(c => ({ x: c.x - c.nx * c.r, y: c.y - c.ny * c.r }));
+    const contour = left.concat(cap, right);
 
     return {
       id, f, r, cs, knuckle, tip,
-      path: this._smoothClosed(left.concat(cap, right), 0.9)
+      path: this._smoothClosed(contour, 0.9),
+      openPath: this._smoothOpen(contour, 0.9)
     };
   }
 
@@ -441,20 +488,20 @@ export class HandOverlay {
     const thumbId = isLeft ? 'LT' : 'RT';
     const fs = ids.map(id => this.fingers[id]);
 
-    // Palm drifts a little with the average finger movement
+    // Palm drifts slightly with average finger movement
     const cx = fs.reduce((a, f) => a + f.hx, 0) / fs.length;
     let ax = 0, ay = 0;
     fs.forEach(f => { ax += f.x - f.hx; ay += f.y - f.hy; });
     ax /= fs.length; ay /= fs.length;
-    const shiftX = ax * 0.4;
-    const shiftY = ay * 0.3;
+    const shiftX = ax * 0.35;
+    const shiftY = ay * 0.25;
 
-    // Knuckles (arched) with reach clamping so fingers never over-stretch
+    // Knuckles aligned directly below home row keys (eliminates inward squeeze offset)
     const knuckles = {};
     ids.forEach(id => {
       const f = this.fingers[id];
-      let kx = cx + (f.hx - cx) * 0.88 + shiftX + (f.x - f.hx) * 0.15;
-      let ky = f.hy + U * this.dropMap[f.name] + shiftY + (f.y - f.hy) * 0.4;
+      let kx = f.hx + shiftX * 0.5 + (f.x - f.hx) * 0.12;
+      let ky = f.hy + U * this.dropMap[f.name] + shiftY * 0.5 + (f.y - f.hy) * 0.15;
 
       let dx = kx - f.x, dy = ky - f.y;
       let d = Math.hypot(dx, dy);
@@ -479,32 +526,35 @@ export class HandOverlay {
     const maxKy = Math.max(kP.y, kR.y, kM.y, kI.y);
 
     // Wrist sits BELOW and OUTWARD of the knuckles (forearms flare away from centre)
-    const wc = { x: cx - s * U * 0.7 + shiftX * 0.6, y: maxKy + U * 3.6 };
+    const wc = { x: cx - s * U * 0.28 + shiftX * 0.5, y: maxKy + U * 3.3 };
 
     // ---- Thumb joint: inner side of the lower palm, close to the index knuckle ----
     const tf = this.fingers[thumbId];
     let thumbTipY = tf.y;
     if (tf.isTapping) thumbTipY += Math.sin(tf.tapProgress * Math.PI) * U * 0.08;
     const tb = {
-      x: kI.x + s * U * 0.3,
-      y: kI.y + U * 2.0
+      x: kI.x + s * U * 0.25,
+      y: kI.y + U * 1.9
     };
 
-    // ---- Palm silhouette: wide at the knuckles, running down and outward
-    //      to the wrist, with the thenar mound bulging on the thumb side ----
+    // ---- Palm silhouette: sculpted with interdigital webs and full index knuckle wrap ----
     const palmPts = [
       { x: kP.x - s * rP * 1.15, y: kP.y + rP * 0.3 },          // outer top corner
-      { x: kP.x - s * rP * 0.1, y: kP.y - rP * 0.5 },
-      { x: kR.x, y: kR.y - rR * 0.7 },
-      { x: kM.x, y: kM.y - rM * 0.75 },
+      { x: kP.x - s * rP * 0.2, y: kP.y - rP * 0.55 },
+      { x: (kP.x + kR.x) / 2, y: (kP.y + kR.y) / 2 - rP * 0.28 }, // web pinky-ring
+      { x: kR.x, y: kR.y - rR * 0.6 },
+      { x: (kR.x + kM.x) / 2, y: (kR.y + kM.y) / 2 - rR * 0.28 }, // web ring-middle
+      { x: kM.x, y: kM.y - rM * 0.65 },
+      { x: (kM.x + kI.x) / 2, y: (kM.y + kI.y) / 2 - rM * 0.28 }, // web middle-index
       { x: kI.x, y: kI.y - rI * 0.6 },
-      { x: kI.x + s * rI * 1.15, y: kI.y + rI * 0.3 },          // index side
-      { x: kI.x + s * U * 0.85, y: kI.y + U * 1.7 },           // thumb web
-      { x: kI.x + s * U * 0.75, y: kI.y + U * 2.7 },           // thenar bulge
-      { x: kI.x + s * U * 0.3, y: kI.y + U * 3.4 },           // thenar base
-      { x: wc.x + s * U * 0.95, y: wc.y },                     // inner wrist
-      { x: wc.x - s * U * 0.95, y: wc.y },                     // outer wrist
-      { x: kP.x - s * U * 0.45, y: kP.y + U * 2.0 }            // hypothenar edge
+      { x: kI.x + s * rI * 1.15, y: kI.y - rI * 0.15 },        // wrap around top of index knuckle
+      { x: kI.x + s * rI * 1.12, y: kI.y + rI * 0.6 },         // index inner flank (fully encloses finger!)
+      { x: kI.x + s * U * 0.52, y: kI.y + U * 1.4 },           // smooth thumb web sweep
+      { x: kI.x + s * U * 0.36, y: kI.y + U * 2.2 },           // thenar mound
+      { x: kI.x + s * U * 0.1, y: kI.y + U * 3.0 },            // thenar base
+      { x: wc.x + s * U * 0.45, y: wc.y },                     // inner wrist
+      { x: wc.x - s * U * 0.85, y: wc.y },                     // outer wrist
+      { x: kP.x - s * U * 0.45, y: kP.y + U * 1.9 }            // hypothenar edge
     ];
     const palmPath = this._smoothClosed(palmPts, 0.9);
 
@@ -520,73 +570,134 @@ export class HandOverlay {
     });
     const all = [thumbGeom, ...geoms];
 
-    // ---- Layers ----
+    if (this.mode === 'off' || !this.isEnabled) {
+      return '';
+    }
+
+    // ---- Active / Shift identification ----
+    const activeGeoms = all.filter(g => g.id === this.activeFingerId || g.id === this.shiftFingerId);
     const C = this.skin;
-    let shadow = `<path d="${palmPath}" fill="#000"/>`;
-    let outline = `<path d="${palmPath}" fill="${C.outline}" stroke="${C.outline}" stroke-width="3" stroke-linejoin="round"/>`;
-    all.forEach(g => {
-      shadow += `<path d="${g.path}" fill="#000"/>`;
-      outline += `<path d="${g.path}" fill="${C.outline}" stroke="${C.outline}" stroke-width="3" stroke-linejoin="round"/>`;
+
+    // Compact fingertip halo ring (centered right on target key dish)
+    let activeHalo = '';
+    activeGeoms.forEach(g => {
+      const isShift = g.id === this.shiftFingerId;
+      const col = isShift ? '#ec4899' : '#38bdf8';
+      const haloR = Math.min(13, this.keyH * 0.32);
+      const haloY = g.tip.y; // placed exactly on key center dish
+      activeHalo += `
+        <circle cx="${this._f(g.tip.x)}" cy="${this._f(haloY)}" r="${this._f(haloR)}"
+          fill="${col}" fill-opacity="0.18" stroke="${col}" stroke-width="1.8" class="overlay-halo-pulse"
+          style="transform-box:fill-box;transform-origin:center" opacity="0.95"/>
+        <circle cx="${this._f(g.tip.x)}" cy="${this._f(haloY)}" r="3"
+          fill="#fff" opacity="0.9"/>
+      `;
     });
 
-    let fill = `<path d="${palmPath}" fill="url(#${isLeft ? 'palmLeft' : 'palmRight'})"/>`;
+    // If active-only mode, draw only the active finger(s) on this hand with realistic translucent skin & blue glow
+    if (this.mode === 'active') {
+      if (activeGeoms.length === 0) return '';
 
-    // Soft centre highlight on the palm
-    const pcx = (kP.x + kI.x) / 2 - s * U * 0.2;
-    const pcy = kM.y + U * 1.2;
-    fill += `<ellipse cx="${this._f(pcx)}" cy="${this._f(pcy)}" rx="${this._f(U * 1.3)}" ry="${this._f(U * 0.8)}"
-      fill="${C.light}" opacity="0.25"/>`;
+      let actShadow = '';
+      let actOutline = '';
+      let actFill = '';
+      let actHighlights = '';
+      activeGeoms.forEach(g => {
+        const isShift = g.id === this.shiftFingerId;
+        const gradId = isShift ? 'shiftFingerGlow' : 'activeFingerGlow';
+        const col = isShift ? '#ec4899' : '#38bdf8';
 
-    // Thenar mound (thumb pad), tilted along the thumb bone toward the wrist
-    const mx = kI.x + s * U * 0.35;
-    const my = kI.y + U * 2.7;
-    fill += `<ellipse cx="${this._f(mx)}" cy="${this._f(my)}" rx="${this._f(U * 0.7)}" ry="${this._f(U * 1.0)}"
-      transform="rotate(${s * 18} ${this._f(mx)} ${this._f(my)})" fill="${C.light}" opacity="0.32"/>`;
+        actShadow += `<path d="${g.path}" fill="#000"/>`;
+        actOutline += `<path d="${g.path}" fill="${C.outline}" stroke="${C.edge}" stroke-width="2.2" stroke-linejoin="round"/>`;
+        actFill += this._fingerDetail(g);
+        actHighlights += `<path d="${g.path}" fill="url(#${gradId})"/>`;
+        actHighlights += `<path d="${g.path}" fill="none" stroke="${col}" stroke-width="2.4" stroke-opacity="0.6" filter="url(#glowBlur)"/>`;
+        actHighlights += `<path d="${g.path}" fill="none" stroke="${col}" stroke-width="1.3" stroke-opacity="0.85"/>`;
+      });
 
-    // Palm creases: heart line across the top, life line curving round the thumb mound
-    fill += `<path d="M ${this._f(kP.x - s * rP * 0.3)} ${this._f(kP.y + U * 0.55)}
-      Q ${this._f((kP.x + kI.x) / 2)} ${this._f(kP.y + U * 1.0)} ${this._f(kI.x + s * U * 0.5)} ${this._f(kI.y + U * 0.45)}"
-      stroke="${C.line}" stroke-width="1.2" fill="none" opacity="0.26" stroke-linecap="round"/>`;
-    fill += `<path d="M ${this._f(kI.x + s * U * 0.3)} ${this._f(kI.y + U * 0.6)}
-      Q ${this._f(kI.x + s * U * 0.9)} ${this._f(kI.y + U * 2.2)} ${this._f(wc.x + s * U * 0.3)} ${this._f(wc.y - U * 0.6)}"
-      stroke="${C.line}" stroke-width="1.1" fill="none" opacity="0.24" stroke-linecap="round"/>`;
+      return `
+        <g class="hand-${side} hand-active-only">
+          <g filter="url(#handBlur)" opacity="${this._f(Math.min(0.35, this.opacity * 0.38))}" transform="translate(0 ${this._f(U * 0.08)})">${actShadow}</g>
+          <g opacity="${this._f(Math.min(1.0, this.opacity + 0.1))}">
+            <g filter="url(#softEdge)">${actOutline}</g>
+            ${actFill}
+            ${actHighlights}
+          </g>
+          ${activeHalo}
+        </g>`;
+    }
 
-    // Thumb first (sits in front of the palm), then fingers
+    // ---- Mode: FULL (Anatomical hand: unified translucent skin with cohesive blue active finger glow) ----
+    // 1. Unified shadow for palm and all fingers
+    let handShadow = `<path d="${palmPath}" fill="#000"/>`;
     all.forEach(g => {
-      fill += this._fingerDetail(g);
+      handShadow += `<path d="${g.path}" fill="#000"/>`;
+    });
+
+    // 2. Crisp anatomical edge outlines (flanks and fingers only — no stroke across knuckles)
+    let handOutline = `<path d="${palmPath}" fill="${C.outline}"/>`;
+    // Outer hand flank (outer wrist -> hypothenar -> pinky)
+    handOutline += `<path d="${this._smoothOpen([palmPts[14], palmPts[15], palmPts[0]], 0.8)}" fill="none" stroke="${C.edge}" stroke-width="2.2" stroke-linecap="round"/>`;
+    // Inner hand flank (index -> thumb web -> thenar -> inner wrist)
+    handOutline += `<path d="${this._smoothOpen([palmPts[8], palmPts[9], palmPts[10], palmPts[11], palmPts[12], palmPts[13]], 0.8)}" fill="none" stroke="${C.edge}" stroke-width="2.2" stroke-linecap="round"/>`;
+    // Finger side outlines
+    all.forEach(g => {
+      handOutline += `<path d="${g.openPath}" fill="none" stroke="${C.edge}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    });
+
+    // 3. Seamless dorsal skin fill & subtle extensor tendons (blends fingers smoothly into hand)
+    let palmFill = `<path d="${palmPath}" fill="url(#dorsalGrad)"/>`;
+    // Subtle dorsal extensor tendons extending from knuckles toward wrist
+    const tendonKnuckles = [kP, kR, kM, kI];
+    tendonKnuckles.forEach(k => {
+      palmFill += `<line x1="${this._f(k.x)}" y1="${this._f(k.y - U * 0.1)}"
+        x2="${this._f(wc.x + (k.x - wc.x) * 0.35)}" y2="${this._f(wc.y - U * 0.9)}"
+        stroke="${C.light}" stroke-width="1.4" stroke-opacity="0.22" stroke-linecap="round"/>`;
+      palmFill += `<line x1="${this._f(k.x - s * 1.4)}" y1="${this._f(k.y)}"
+        x2="${this._f(wc.x + (k.x - wc.x) * 0.35 - s * 1.4)}" y2="${this._f(wc.y - U * 0.85)}"
+        stroke="${C.shade}" stroke-width="1.0" stroke-opacity="0.12" stroke-linecap="round"/>`;
+    });
+
+    // 4. Render ALL fingers in the SAME natural translucent skin!
+    let fingersFill = '';
+    all.forEach(g => {
+      fingersFill += this._fingerDetail(g);
       if (g.id === thumbId) {
-        // Soft edge so the thumb reads as separate from the palm
-        fill += `<path d="${g.path}" fill="none" stroke="${C.line}" stroke-width="1"
-          stroke-opacity="0.28" stroke-linejoin="round"/>`;
+        fingersFill += `<path d="${g.path}" fill="none" stroke="${C.line}" stroke-width="1.2"
+          stroke-opacity="0.35" stroke-linejoin="round"/>`;
       }
     });
 
-    // ---- Active / shift glow: fingertip only (outside the transparent group) ----
-    let active = '';
-    all.forEach(g => {
-      const isActive = g.id === this.activeFingerId;
+    // 5. Active finger blue tint & luminous edge glow (SAME skin, illuminated like part of the hand)
+    let activeHighlights = '';
+    activeGeoms.forEach(g => {
       const isShift = g.id === this.shiftFingerId;
-      if (!isActive && !isShift) return;
-
+      const gradId = isShift ? 'shiftFingerGlow' : 'activeFingerGlow';
       const col = isShift ? '#ec4899' : '#38bdf8';
-      const tipPart = g.cs.slice(-5);
-      active += `<path d="${this._polyline(tipPart)}" stroke="${col}" stroke-width="${this._f(g.r * 1.4)}"
-        stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.4" filter="url(#glowBlur)"/>`;
-      active += `<circle cx="${this._f(g.tip.x)}" cy="${this._f(g.tip.y)}" r="${this._f(g.r * 1.05)}"
-        fill="${col}" fill-opacity="0.2" stroke="${col}" stroke-width="2" opacity="0.95"/>`;
-      active += `<circle cx="${this._f(g.tip.x)}" cy="${this._f(g.tip.y)}" r="${this._f(g.r * 1.5)}"
-        fill="none" stroke="${col}" stroke-width="1.2" class="overlay-halo-pulse"
-        style="transform-box:fill-box;transform-origin:center" opacity="0.7"/>`;
+
+      // Translucent cyan/blue wash overlay
+      activeHighlights += `<path d="${g.path}" fill="url(#${gradId})"/>`;
+      // Luminous blue outer blur (open contour: sides and tip only, dives smoothly into palm)
+      activeHighlights += `<path d="${g.openPath}" fill="none" stroke="${col}" stroke-width="2.5" stroke-opacity="0.6" filter="url(#glowBlur)" stroke-linecap="round"/>`;
+      // Crisp neon accent rim (open contour: sides and tip only)
+      activeHighlights += `<path d="${g.openPath}" fill="none" stroke="${col}" stroke-width="1.4" stroke-opacity="0.85" stroke-linecap="round"/>`;
     });
 
+    // The whole hand renders as ONE cohesive entity with user-selected transparency.
+    // Fingers are drawn first, then palm fill covers knuckle transitions seamlessly.
     return `
       <g class="hand-${side}">
-        <g filter="url(#handBlur)" opacity="0.2" transform="translate(0 ${this._f(U * 0.08)})">${shadow}</g>
-        <g opacity="${this.opacity}">
-          <g filter="url(#softEdge)">${outline}</g>
-          ${fill}
+        <!-- Soft realistic contact shadow -->
+        <g filter="url(#handBlur)" opacity="${this._f(Math.min(0.35, this.opacity * 0.38))}" transform="translate(0 ${this._f(U * 0.08)})">${handShadow}</g>
+        <!-- Unified hand geometry (same skin, realistic edge line, illuminated active finger) -->
+        <g opacity="${this._f(this.opacity)}">
+          <g filter="url(#softEdge)">${handOutline}</g>
+          ${fingersFill}
+          ${palmFill}
+          ${activeHighlights}
         </g>
-        ${active}
+        <!-- Fingertip halo ring -->
+        ${activeHalo}
       </g>`;
   }
 

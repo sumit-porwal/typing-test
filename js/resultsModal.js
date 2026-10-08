@@ -122,6 +122,9 @@ export class ResultsModal {
     if (this.modalEl) {
       this.modalEl.classList.remove('open');
     }
+    if (this.app && this.app.isFinished && typeof this.app.showFinishedPrompt === 'function') {
+      this.app.showFinishedPrompt();
+    }
   }
 
   isOpen() {

@@ -129,6 +129,17 @@ export class VirtualKeyboard {
     }
   }
 
+  clearHighlights() {
+    if (this.currentTargetKey) {
+      this.currentTargetKey.classList.remove('target-active', 'target-pulse');
+      this.currentTargetKey = null;
+    }
+    if (this.currentShiftKey) {
+      this.currentShiftKey.classList.remove('shift-active');
+      this.currentShiftKey = null;
+    }
+  }
+
   pressKey(code, isCorrect = true) {
     let el = this.keyElements.get(code);
 

@@ -497,17 +497,18 @@ export class AcademyManager {
       card.className = `lesson-chip ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`;
       card.dataset.idx = idx;
 
-      const keysClean = lesson.keys
+      // Only show key badges for the active lesson to keep chips clean & legible
+      const keysClean = isActive ? lesson.keys
         .filter(k => k.trim() && k !== 'ShiftLeft' && k !== 'ShiftRight')
         .slice(0, 3)
         .map(k => k.toUpperCase())
-        .join(' ');
+        .join(' ') : '';
 
       card.innerHTML = `
         <span class="lesson-chip-num">L${lesson.level}</span>
         <span class="lesson-chip-title">${lesson.title.replace(/^Level \d+:\s*/, '')}</span>
         ${keysClean ? `<span class="lesson-chip-keys">${keysClean}</span>` : ''}
-        ${isCompleted ? `<span class="lesson-chip-check">✓</span>` : ''}
+        ${isCompleted ? `<span class="lesson-chip-check" title="Completed">✓</span>` : ''}
       `;
 
       card.addEventListener('click', () => {

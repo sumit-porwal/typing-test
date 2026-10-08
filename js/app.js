@@ -136,6 +136,10 @@ class TypingApp {
     const restartBtn = document.getElementById('btn-restart');
     if (restartBtn) restartBtn.addEventListener('click', () => this.resetTest());
 
+    // Restart button on completion banner
+    const finishRestartBtn = document.getElementById('finish-banner-restart-btn');
+    if (finishRestartBtn) finishRestartBtn.addEventListener('click', () => this.resetTest(true));
+
     // Window click background focus
     document.addEventListener('click', (e) => {
       if (!e.target.closest('input, select, textarea, button, .modal-content, .drawer-content')) {
@@ -163,7 +167,9 @@ class TypingApp {
     this.charIndex = 0;
     this.isFinished = false;
     this.metrics.reset();
+    clearTimeout(this._zenIdleTimer);
     document.body.classList.remove('zen-typing-focused');
+    this.hideFinishedPrompt();
 
     if (regenerateText) {
       this.targetText = this.academy.generateModeText();
@@ -365,17 +371,44 @@ class TypingApp {
       if (conveyor) {
         const boxWidth = this.textDisplayEl.clientWidth;
         const charLeft = targetSpan.offsetLeft;
-        const charWidth = targetSpan.offsetWidth || 14;
+        const charWidth = targetSpan.offsetWidth || 18;
         const charCenter = charLeft + (charWidth / 2);
         const targetTranslateX = (boxWidth / 2) - charCenter;
         conveyor.style.transform = `translateX(${targetTranslateX}px)`;
 
         this.caretEl.style.display = 'block';
-        this.caretEl.style.left = '50%';
-        this.caretEl.style.top = '50%';
-        this.caretEl.style.transform = 'translate(-50%, -50%)';
-        this.caretEl.style.width = (this.settings.cursorStyle === 'line') ? '2.5px' : `${Math.max(12, charWidth)}px`;
-        this.caretEl.style.height = (this.settings.cursorStyle === 'underline') ? '3px' : '36px';
+        const cursorStyle = this.settings ? this.settings.cursorStyle : 'line';
+        const halfChar = charWidth / 2;
+
+        if (cursorStyle === 'line') {
+          // Line cursor: sits at the left boundary of the character, scaled to 1.85rem font height
+          this.caretEl.style.left = `calc(50% - ${halfChar}px)`;
+          this.caretEl.style.top = '50%';
+          this.caretEl.style.transform = 'translateY(-50%)';
+          this.caretEl.style.width = '3.5px';
+          this.caretEl.style.height = '46px';
+        } else if (cursorStyle === 'underline') {
+          // Underline cursor: sits under the character at the font baseline
+          this.caretEl.style.left = '50%';
+          this.caretEl.style.top = 'calc(50% + 22px)';
+          this.caretEl.style.transform = 'translateX(-50%)';
+          this.caretEl.style.width = `${Math.max(16, charWidth + 2)}px`;
+          this.caretEl.style.height = '4px';
+        } else if (cursorStyle === 'outline') {
+          // Outline cursor: surrounds the character box
+          this.caretEl.style.left = '50%';
+          this.caretEl.style.top = '50%';
+          this.caretEl.style.transform = 'translate(-50%, -50%)';
+          this.caretEl.style.width = `${Math.max(16, charWidth + 2)}px`;
+          this.caretEl.style.height = '48px';
+        } else {
+          // Block cursor: covers the full character box
+          this.caretEl.style.left = '50%';
+          this.caretEl.style.top = '50%';
+          this.caretEl.style.transform = 'translate(-50%, -50%)';
+          this.caretEl.style.width = `${Math.max(16, charWidth + 2)}px`;
+          this.caretEl.style.height = '48px';
+        }
         return;
       }
     }
@@ -539,7 +572,26 @@ class TypingApp {
       }
     }
 
-    if (this.isFinished) return;
+    if (this.isFinished) {
+      // Escape: if modal is open, close it and show restart prompt
+      if (e.key === 'Escape') {
+        if (this.resultsModal && this.resultsModal.isOpen()) {
+          e.preventDefault();
+          this.resultsModal.hide();
+          return;
+        }
+      }
+
+      // Any keypress (Space, Enter, or regular character key) cleanly starts a fresh new test
+      if (e.key === ' ' || e.key === 'Enter' || (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey)) {
+        e.preventDefault();
+        if (this.resultsModal && this.resultsModal.isOpen()) this.resultsModal.hide();
+        this.resetTest(true);
+        this.showToast('✨ Ready — Start typing to begin');
+        return;
+      }
+      return;
+    }
 
     if (this.textDisplayEl && this.textDisplayEl.classList.contains('blurred')) {
       this.textDisplayEl.classList.remove('blurred');
@@ -557,13 +609,22 @@ class TypingApp {
     // Start timer on first active keystroke
     if (!this.metrics.startTime) {
       this.metrics.start(Date.now());
-      this.hands.setStatusTag('TYPING', 'active');
+      const isZen = (this.academy.mode === 'zen');
+      this.hands.setStatusTag(isZen ? 'FLOW' : 'TYPING', 'active');
       this._startTimer();
-      if (this.academy.mode === 'zen') {
-        document.body.classList.add('zen-typing-focused');
-      }
     } else {
       this.metrics.recordInterval(Date.now());
+    }
+
+    // In Zen mode, actively typing keeps the screen 100% distraction-free
+    if (this.academy && this.academy.mode === 'zen') {
+      document.body.classList.add('zen-typing-focused');
+      clearTimeout(this._zenIdleTimer);
+      this._zenIdleTimer = setTimeout(() => {
+        if (!this.isFinished) {
+          document.body.classList.remove('zen-typing-focused');
+        }
+      }, 3500);
     }
 
     // Backspace
@@ -620,6 +681,7 @@ class TypingApp {
           currentCharSpan.classList.add('char-error');
         }
         sound.playError();
+        this.triggerScreenErrorFlash();
         this.keyboard.pressKey(e.code, false);
         tts.announceMistake(expectedChar, FINGERS[fingerId]);
       }
@@ -679,7 +741,22 @@ class TypingApp {
     }, 250);
   }
 
+  triggerScreenErrorFlash() {
+    document.body.classList.remove('screen-error-flash');
+    void document.body.offsetWidth;
+    document.body.classList.add('screen-error-flash');
+    setTimeout(() => {
+      document.body.classList.remove('screen-error-flash');
+    }, 220);
+  }
+
   _updateLiveStats() {
+    if (!this.metrics.startTime) {
+      if (this.statWpmEl) this.statWpmEl.textContent = '—';
+      if (this.statAccEl) this.statAccEl.textContent = '—';
+      if (this.statStreakEl) this.statStreakEl.textContent = '0';
+      return;
+    }
     const { grossWpm, accuracy, streak } = this.metrics.getLiveStats();
     if (this.statWpmEl) this.statWpmEl.textContent = grossWpm;
     if (this.statAccEl) this.statAccEl.textContent = `${accuracy}%`;
@@ -690,12 +767,13 @@ class TypingApp {
     if (this.isFinished) return;
     this.isFinished = true;
     clearInterval(this.timerInterval);
+    clearTimeout(this._zenIdleTimer);
     document.body.classList.remove('zen-typing-focused');
 
     const stats = this.metrics.getFinalStats();
 
     sound.playComplete();
-    this.hands.setStatusTag('COMPLETE!', 'complete');
+    this.showFinishedPrompt();
     tts.announceFeedback(`Great work! Finished at ${stats.netWpm} words per minute with ${stats.accuracy} percent accuracy.`);
 
     if (stats.accuracy >= 95 || stats.netWpm >= 65) {
@@ -718,6 +796,18 @@ class TypingApp {
       this.metrics.missedKeys,
       this.metrics.wpmHistory
     );
+  }
+
+  showFinishedPrompt() {
+    const banner = document.getElementById('test-finish-banner');
+    if (banner) banner.style.display = 'flex';
+    if (this.hands) this.hands.setFinishedState();
+    if (this.keyboard) this.keyboard.clearHighlights();
+  }
+
+  hideFinishedPrompt() {
+    const banner = document.getElementById('test-finish-banner');
+    if (banner) banner.style.display = 'none';
   }
 
   // Helper delegates

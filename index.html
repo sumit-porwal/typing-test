@@ -33,7 +33,7 @@
     content="Master touch typing with interactive realistic virtual hands, illuminated mechanical keyboard, real-time finger guidance, procedural switch audio, and AI voice coach.">
   <meta name="twitter:image" content="./image.png">
 
-  <link rel="icon" href="./image.png" type="image/x-icon">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -43,213 +43,261 @@
 
   <div class="app-wrapper">
     <!-- Compact Cockpit Header -->
+    <!-- Compact Cockpit Header (Single Row) -->
     <header class="site-header" role="banner">
+      <!-- Brand Area -->
       <div class="brand-area">
-        <div class="brand-icon">⌨️</div>
-        <h1 class="brand-title">KeyVibe <span class="brand-badge">STUDIO</span></h1>
+        <h1 class="brand-title">KeyVibe</h1>
       </div>
 
       <!-- Center Practice Modes -->
       <nav class="header-nav" aria-label="Practice Modes">
-        <button class="mode-tab active" data-mode="words">
-          <span>⚡</span> Words
+        <button class="mode-tab active" data-mode="words" title="Words Sprint Practice [Alt+W]">
+          <svg class="tab-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Words
         </button>
-        <button class="mode-tab" data-mode="academy">
-          <span>🎓</span> Academy
+        <button class="mode-tab" data-mode="academy" title="Guided Touch Typing Lessons [Alt+A]">
+          <svg class="tab-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 3 6 3 6 3s6 0 6-3v-5"/></svg>
+          Academy
         </button>
-        <button class="mode-tab" data-mode="quotes">
-          <span>💬</span> Quotes
+        <button class="mode-tab" data-mode="quotes" title="Practice Famous Literature & Wisdom Quotes [Alt+Q]">
+          <svg class="tab-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4a5 5 0 0 1-5 5M20 11h-4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4a5 5 0 0 1-5 5"/></svg>
+          Quotes
         </button>
         <button class="mode-tab" data-mode="zen" title="Zen Conveyor: Center-locked cursor, zero distraction, gliding text [Alt+Z]">
-          <span>☯</span> Zen
+          <svg class="tab-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a5 5 0 0 0 0 10 5 5 0 0 1 0 10"/><circle cx="12" cy="7" r="1.5"/><circle cx="12" cy="17" r="1.5"/></svg>
+          Zen
         </button>
       </nav>
 
-      <div class="header-actions">
-        <button class="action-btn active" id="btn-toggle-keyboard" aria-pressed="true"
-          title="Toggle virtual keyboard visibility [Alt+K]">
-          <span id="kb-toggle-icon">⌨️</span> <span id="kb-toggle-label">Keyboard</span>
-        </button>
-        <button class="action-btn active" id="btn-toggle-hands" aria-pressed="true"
-          title="Toggle realistic hand overlay on keyboard">
-          <span>🖐️</span> <span id="hands-toggle-label">Hands</span>
-        </button>
-        <button class="action-btn active" id="btn-toggle-voice" aria-pressed="true"
-          aria-label="Toggle AI Voice Coach"
-          title="AI Voice Coach: Spoken typing feedback (Click to toggle On/Off, Shift+Click to cycle modes) [Alt+V]">
-          <span id="voice-toggle-icon">🗣️</span> <span id="voice-toggle-label">Coach</span>
-        </button>
-        <button class="action-btn active" id="btn-toggle-sound" aria-label="Toggle keyboard sound or switch profile"
-          title="Keyboard Sound: Click to cycle profiles, Shift+Click to mute">
-          <span id="sound-toggle-icon">🔊</span> <span id="sound-toggle-label">Sound</span>
-        </button>
-        <button class="action-btn active" id="btn-toggle-cursor" aria-label="Toggle cursor style"
-          title="Cursor Style: Click to cycle (Line, Block, Underline, Outline)">
-          <span id="cursor-toggle-icon">|</span> <span id="cursor-toggle-label">Line</span>
-        </button>
-        <button class="action-btn" id="btn-open-custom" title="Practice your own custom text">
-          <span>✍️</span> <span>Custom</span>
-        </button>
-        <button class="action-btn" id="btn-toggle-settings" title="Open Studio Settings (Audio, Hands, Keyboard, Cursor, Voice)">
-          <span>⚙️</span> <span>Settings</span>
-        </button>
+      <!-- All Studio Controls & Tools Grouped on the Right -->
+      <div class="header-controls-group">
+        <!-- View Group: Keyboard & Hands -->
+        <div class="action-btn-group" data-group="view">
+          <button class="action-btn active" id="btn-toggle-keyboard" aria-pressed="true"
+            title="Keyboard (Alt+K) — Toggle virtual keyboard visibility">
+            <svg class="action-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8"/></svg>
+            <span class="btn-text" id="kb-toggle-label">Keyboard</span>
+            <span class="btn-mode-badge" id="kb-mode-badge">ON</span>
+          </button>
+          <button class="action-btn active" id="btn-toggle-hands" aria-pressed="true" data-hand-mode="full"
+            title="Hands (FULL) — Realistic hand overlay (Click to cycle Full / Active / Off)">
+            <svg class="action-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v4M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8M18 8a2 2 0 0 1 4 4v4a8 8 0 0 1-16 0"/></svg>
+            <span class="btn-text" id="hands-toggle-label">Hands</span>
+            <span class="btn-mode-badge" id="hands-mode-badge">FULL</span>
+          </button>
+        </div>
+
+        <span class="group-separator" aria-hidden="true"></span>
+
+        <!-- Coach Group: Voice Coach -->
+        <div class="action-btn-group" data-group="coach">
+          <button class="action-btn active" id="btn-toggle-voice" aria-pressed="true"
+            title="Voice Coach (Alt+V) — Click to toggle On/Off, Shift+Click to cycle modes">
+            <svg class="action-icon" id="voice-toggle-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+            <span class="btn-text" id="voice-toggle-label">Coach</span>
+            <span class="btn-mode-badge" id="voice-mode-badge">LETTER</span>
+          </button>
+        </div>
+
+        <span class="group-separator" aria-hidden="true"></span>
+
+        <!-- Feel Group: Sound & Caret -->
+        <div class="action-btn-group" data-group="feel">
+          <button class="action-btn action-btn--icon-only active" id="btn-toggle-sound" aria-pressed="true"
+            title="Sound — Click to cycle mechanical switch profiles, Shift+Click to mute">
+            <svg class="action-icon" id="sound-toggle-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          </button>
+          <button class="action-btn active" id="btn-toggle-cursor" aria-pressed="true"
+            title="Caret (LINE) — Cursor style (Click to cycle Line, Block, Underline, Outline)">
+            <svg class="action-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M8 4h8M8 20h8"/></svg>
+            <span class="btn-text" id="cursor-toggle-label">Caret</span>
+            <span class="btn-mode-badge" id="cursor-mode-badge">LINE</span>
+          </button>
+        </div>
+
+        <span class="group-separator" aria-hidden="true"></span>
+
+        <!-- Tools Group: Custom & Settings -->
+        <div class="action-btn-group" data-group="tools">
+          <button class="action-btn action-btn--icon-only" id="btn-open-custom" title="Custom Text — Practice your own custom text">
+            <svg class="action-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+          </button>
+          <button class="action-btn action-btn--icon-only" id="btn-toggle-settings" title="Settings (Esc) — Audio, Hands, Keyboard & Studio options">
+            <svg class="action-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
       </div>
     </header>
 
-    <!-- Subnav Strip (Levels or Word Count / Timed Modes / Zen Options) -->
-    <div class="subnav-strip">
-      <div class="academy-subbar" id="academy-subbar" style="display: none;">
-        <div class="academy-nav-controls">
-          <button class="sub-opt-btn academy-nav-btn" id="btn-academy-prev" title="Previous Lesson">
-            <span>◀</span> Prev
-          </button>
-          <div class="academy-category-wrapper">
-            <select class="subbar-select" id="select-academy-cat" title="Filter Lessons by Category">
-              <option value="all">📚 All Lessons (1–12)</option>
-              <option value="Home Row">🏠 Home Row</option>
-              <option value="Top Row">⬆️ Top Row</option>
-              <option value="Bottom Row">⬇️ Bottom Row</option>
-              <option value="Advanced">⭐ Advanced</option>
+    <!-- Focus Stack: Grouped Subnav, Typing Stage, and Coach Bar for consistent spacing -->
+    <div class="focus-stack" id="focus-stack">
+      <!-- Subnav Strip (Levels or Word Count / Timed Modes / Zen Options) -->
+      <div class="subnav-strip">
+        <div class="academy-subbar" id="academy-subbar" style="display: none;">
+          <div class="academy-nav-controls">
+            <button class="sub-opt-btn academy-nav-btn" id="btn-academy-prev" title="Previous Lesson">
+              <span>◀</span> Prev
+            </button>
+            <div class="academy-category-wrapper">
+              <select class="subbar-select" id="select-academy-cat" title="Filter Lessons by Category">
+                <option value="all">📚 All Lessons (1–12)</option>
+                <option value="Home Row">🏠 Home Row</option>
+                <option value="Top Row">⬆️ Top Row</option>
+                <option value="Bottom Row">⬇️ Bottom Row</option>
+                <option value="Advanced">⭐ Advanced</option>
+              </select>
+            </div>
+            <button class="sub-opt-btn academy-nav-btn" id="btn-academy-next" title="Next Lesson">
+              Next <span>▶</span>
+            </button>
+            <span class="academy-progress-badge" id="academy-progress-badge" title="Completed Academy Lessons">0/12 Done</span>
+          </div>
+
+          <div class="subbar-divider"></div>
+
+          <div class="academy-lessons-scroll-wrapper" id="academy-scroll-wrapper">
+            <div id="academy-lessons-list" class="academy-lessons-track"></div>
+          </div>
+        </div>
+
+        <div class="words-subbar" id="words-subbar" style="display: flex;">
+          <div class="subbar-segment">
+            <span class="subbar-segment-label">WORDS</span>
+            <button class="sub-opt-btn" data-words="10">10</button>
+            <button class="sub-opt-btn active" data-words="25">25</button>
+            <button class="sub-opt-btn" data-words="50">50</button>
+            <button class="sub-opt-btn" data-words="100">100</button>
+          </div>
+
+          <div class="subbar-divider"></div>
+
+          <div class="subbar-segment">
+            <span class="subbar-segment-label">TIME</span>
+            <button class="sub-opt-btn" data-time="15">15s</button>
+            <button class="sub-opt-btn" data-time="30">30s</button>
+            <button class="sub-opt-btn" data-time="60">60s</button>
+          </div>
+
+          <div class="subbar-divider"></div>
+
+          <div class="subbar-segment">
+            <button class="sub-toggle-pill" id="toggle-punct" title="Include punctuation marks (. , ! ?)">
+              <span class="pill-sym">@#</span> Punctuation
+            </button>
+            <button class="sub-toggle-pill" id="toggle-numbers" title="Include numbers (0-9)">
+              <span class="pill-sym">123</span> Numbers
+            </button>
+            <select class="subbar-select" id="select-dictionary" title="Select vocabulary dictionary">
+              <option value="standard">Common 200</option>
+              <option value="expanded">Expanded 1k</option>
+              <option value="code">Code &amp; Syntax</option>
             </select>
           </div>
-          <button class="sub-opt-btn academy-nav-btn" id="btn-academy-next" title="Next Lesson">
-            Next <span>▶</span>
-          </button>
-          <span class="academy-progress-badge" id="academy-progress-badge" title="Completed Academy Lessons">0/12 Done</span>
         </div>
 
-        <div class="subbar-divider"></div>
+        <!-- Zen Mode Subbar (Words, Time, Infinity Flow) -->
+        <div class="words-subbar zen-subbar" id="zen-subbar" style="display: none;">
+          <div class="subbar-segment">
+            <span class="subbar-segment-label">ZEN MODE</span>
+            <button class="sub-opt-btn active" data-zen-type="words" id="zen-tab-words">Words</button>
+            <button class="sub-opt-btn" data-zen-type="time" id="zen-tab-time">Time</button>
+            <button class="sub-opt-btn" data-zen-type="infinity" id="zen-tab-infinity">∞ Infinity</button>
+          </div>
 
-        <div class="academy-lessons-scroll-wrapper">
-          <div id="academy-lessons-list" class="academy-lessons-track"></div>
-        </div>
-      </div>
+          <div class="subbar-divider" id="zen-sub-divider"></div>
 
-      <div class="words-subbar" id="words-subbar" style="display: flex;">
-        <div class="subbar-segment">
-          <span class="subbar-segment-label">WORDS</span>
-          <button class="sub-opt-btn" data-words="10">10</button>
-          <button class="sub-opt-btn active" data-words="25">25</button>
-          <button class="sub-opt-btn" data-words="50">50</button>
-          <button class="sub-opt-btn" data-words="100">100</button>
-        </div>
+          <div class="subbar-segment" id="zen-group-words">
+            <span class="subbar-segment-label">COUNT</span>
+            <button class="sub-opt-btn" data-zen-words="10">10</button>
+            <button class="sub-opt-btn active" data-zen-words="25">25</button>
+            <button class="sub-opt-btn" data-zen-words="50">50</button>
+            <button class="sub-opt-btn" data-zen-words="100">100</button>
+          </div>
 
-        <div class="subbar-divider"></div>
+          <div class="subbar-segment" id="zen-group-time" style="display: none;">
+            <span class="subbar-segment-label">TIME</span>
+            <button class="sub-opt-btn" data-zen-time="15">15s</button>
+            <button class="sub-opt-btn active" data-zen-time="30">30s</button>
+            <button class="sub-opt-btn" data-zen-time="60">60s</button>
+          </div>
 
-        <div class="subbar-segment">
-          <span class="subbar-segment-label">TIME</span>
-          <button class="sub-opt-btn" data-time="15">15s</button>
-          <button class="sub-opt-btn" data-time="30">30s</button>
-          <button class="sub-opt-btn" data-time="60">60s</button>
-        </div>
-
-        <div class="subbar-divider"></div>
-
-        <div class="subbar-segment">
-          <button class="sub-toggle-pill" id="toggle-punct" title="Include punctuation marks (. , ! ?)">
-            <span class="pill-sym">@#</span> Punctuation
-          </button>
-          <button class="sub-toggle-pill" id="toggle-numbers" title="Include numbers (0-9)">
-            <span class="pill-sym">123</span> Numbers
-          </button>
-          <select class="subbar-select" id="select-dictionary" title="Select vocabulary dictionary">
-            <option value="standard">Common 200</option>
-            <option value="expanded">Expanded 1k</option>
-            <option value="code">Code &amp; Syntax</option>
-          </select>
+          <div class="subbar-segment" id="zen-group-infinity" style="display: none;">
+            <span class="zen-infinity-badge">∞ Endless Flow &bull; Press Esc to Stop</span>
+          </div>
         </div>
       </div>
 
-      <!-- Zen Mode Subbar (Words, Time, Infinity Flow) -->
-      <div class="words-subbar zen-subbar" id="zen-subbar" style="display: none;">
-        <div class="subbar-segment">
-          <span class="subbar-segment-label">ZEN MODE</span>
-          <button class="sub-opt-btn active" data-zen-type="words" id="zen-tab-words">Words</button>
-          <button class="sub-opt-btn" data-zen-type="time" id="zen-tab-time">Time</button>
-          <button class="sub-opt-btn" data-zen-type="infinity" id="zen-tab-infinity">∞ Infinity</button>
+      <!-- Typing Stage Area (Compact height, live stats & text display) -->
+      <main class="typing-stage" id="main-typing-stage">
+        <!-- Obvious Glowing Caps Lock Indicator Banner -->
+        <div class="caps-lock-hud" id="caps-lock-hud" style="display: none;" role="alert" aria-live="assertive">
+          <div class="caps-lock-pill">
+            <span class="caps-lock-icon">⇪</span>
+            <span class="caps-lock-msg">CAPS LOCK IS ON</span>
+            <span class="caps-lock-tag">Press Caps Lock to deactivate</span>
+          </div>
+        </div>
+        <div class="stage-top-meta">
+          <div class="mode-info-block">
+            <div class="mode-title-row">
+              <span class="mode-info-title" id="current-mode-title">Word Sprint (25 Words)</span>
+              <span class="academy-cat-pill" id="academy-cat-pill" style="display: none;">Home Row</span>
+              <div class="target-keys-badges" id="target-keys-badges" style="display: none;"></div>
+            </div>
+            <span class="mode-info-desc" id="current-mode-desc">Type common English words with smooth flow and rhythmic cadence.</span>
+          </div>
+
+          <div class="live-metrics-row">
+            <div class="metric-pill">
+              <span class="metric-label">WPM</span>
+              <span class="metric-val val-wpm" id="stat-wpm">—</span>
+            </div>
+            <div class="metric-pill">
+              <span class="metric-label">ACC</span>
+              <span class="metric-val val-acc" id="stat-acc">—</span>
+            </div>
+            <div class="metric-pill">
+              <span class="metric-label">STREAK 🔥</span>
+              <span class="metric-val val-streak" id="stat-streak">0</span>
+            </div>
+            <div class="metric-pill">
+              <span class="metric-label">TIME</span>
+              <span class="metric-val" id="stat-time">0s</span>
+            </div>
+            <button class="btn-restart" id="btn-restart" title="Restart Test (or press Tab + Enter)">
+              ↺
+            </button>
+          </div>
         </div>
 
-        <div class="subbar-divider" id="zen-sub-divider"></div>
-
-        <div class="subbar-segment" id="zen-group-words">
-          <span class="subbar-segment-label">COUNT</span>
-          <button class="sub-opt-btn" data-zen-words="10">10</button>
-          <button class="sub-opt-btn active" data-zen-words="25">25</button>
-          <button class="sub-opt-btn" data-zen-words="50">50</button>
-          <button class="sub-opt-btn" data-zen-words="100">100</button>
+        <!-- Interactive Test Complete & Restart Banner -->
+        <div class="test-finish-banner" id="test-finish-banner" style="display: none;" role="status">
+          <div class="finish-banner-content">
+            <span class="finish-banner-icon">🏁</span>
+            <span class="finish-banner-title">Test Complete!</span>
+            <span class="finish-banner-hint">Press <strong>any key</strong> or <strong>Space</strong> to start next test</span>
+          </div>
+          <button class="finish-banner-restart-btn" id="finish-banner-restart-btn" title="Start next test now">
+            <span>↺</span> Next Test
+          </button>
         </div>
 
-        <div class="subbar-segment" id="zen-group-time" style="display: none;">
-          <span class="subbar-segment-label">TIME</span>
-          <button class="sub-opt-btn" data-zen-time="15">15s</button>
-          <button class="sub-opt-btn active" data-zen-time="30">30s</button>
-          <button class="sub-opt-btn" data-zen-time="60">60s</button>
+        <!-- Live Typing Text View with Caret -->
+        <div class="text-display-box" id="text-display" tabindex="0" role="textbox" aria-label="Typing text area" aria-live="polite">
+          <div class="focus-notice" id="focus-notice">
+            <span class="focus-notice-icon">🖱️</span>
+            <span>Click here or press any key to focus</span>
+          </div>
+          <div class="typing-caret" id="typing-caret"></div>
+          <!-- Dynamically injected characters -->
         </div>
+      </main>
 
-        <div class="subbar-segment" id="zen-group-infinity" style="display: none;">
-          <span class="zen-infinity-badge">∞ Endless Flow &bull; Press Esc to Stop</span>
-        </div>
-      </div>
+      <!-- Coach Guidance Bar (rendered by hands.js) -->
+      <section class="virtual-hands-section" aria-label="Typing coach guidance">
+        <div id="hands-container"></div>
+      </section>
     </div>
-
-    <!-- Typing Stage Area (Compact height, live stats & text display) -->
-    <main class="typing-stage" id="main-typing-stage">
-      <!-- Obvious Glowing Caps Lock Indicator Banner -->
-      <div class="caps-lock-hud" id="caps-lock-hud" style="display: none;" role="alert" aria-live="assertive">
-        <div class="caps-lock-pill">
-          <span class="caps-lock-icon">⇪</span>
-          <span class="caps-lock-msg">CAPS LOCK IS ON</span>
-          <span class="caps-lock-tag">Press Caps Lock to deactivate</span>
-        </div>
-      </div>
-      <div class="stage-top-meta">
-        <div class="mode-info-block">
-          <div class="mode-title-row">
-            <span class="mode-info-title" id="current-mode-title">Word Sprint (25 Words)</span>
-            <span class="academy-cat-pill" id="academy-cat-pill" style="display: none;">Home Row</span>
-            <div class="target-keys-badges" id="target-keys-badges" style="display: none;"></div>
-          </div>
-          <span class="mode-info-desc" id="current-mode-desc">Type common English words with smooth flow and rhythmic cadence.</span>
-        </div>
-
-        <div class="live-metrics-row">
-          <div class="metric-pill">
-            <span class="metric-label">WPM</span>
-            <span class="metric-val val-wpm" id="stat-wpm">0</span>
-          </div>
-          <div class="metric-pill">
-            <span class="metric-label">ACC</span>
-            <span class="metric-val val-acc" id="stat-acc">100%</span>
-          </div>
-          <div class="metric-pill">
-            <span class="metric-label">STREAK 🔥</span>
-            <span class="metric-val val-streak" id="stat-streak">0</span>
-          </div>
-          <div class="metric-pill">
-            <span class="metric-label">TIME</span>
-            <span class="metric-val" id="stat-time">0s</span>
-          </div>
-          <button class="btn-restart" id="btn-restart" title="Restart Test (or press Tab + Enter)">
-            ↺
-          </button>
-        </div>
-      </div>
-
-      <!-- Live Typing Text View with Caret -->
-      <div class="text-display-box" id="text-display" tabindex="0" role="textbox" aria-label="Typing text area">
-        <div class="focus-notice" id="focus-notice">
-          <span class="focus-notice-icon">🖱️</span>
-          <span>Click here or press any key to focus</span>
-        </div>
-        <div class="typing-caret" id="typing-caret"></div>
-        <!-- Dynamically injected characters -->
-      </div>
-    </main>
-
-    <!-- Coach Guidance Bar (rendered by hands.js) -->
-    <section class="virtual-hands-section" aria-label="Typing coach guidance">
-      <div id="hands-container"></div>
-    </section>
 
     <!-- Virtual Keyboard Section -->
     <section class="keyboard-section" aria-label="Interactive Virtual Keyboard">
@@ -274,14 +322,17 @@
     <!-- Empty space under the keyboard so palms and wrists are visible -->
     <div class="hands-room" aria-hidden="true"></div>
 
-    <!-- Quick shortcuts footer hint -->
+    <!-- Quick shortcuts footer hint with dedicated spacing -->
     <footer class="app-quick-shortcuts" aria-label="Keyboard Shortcuts">
-      <span class="shortcut-tag"><kbd>Tab</kbd> + <kbd>Enter</kbd> restart</span>
-      <span class="shortcut-tag"><kbd>Alt</kbd> + <kbd>K</kbd> keyboard</span>
-      <span class="shortcut-tag"><kbd>Alt</kbd> + <kbd>V</kbd> coach</span>
-      <span class="shortcut-tag"><kbd>Esc</kbd> settings</span>
-      <span class="shortcut-tag"><kbd>Shift</kbd> + <kbd>Sound</kbd> mute</span>
-      <span class="shortcut-tag" id="shortcut-mode-hint"><kbd>⚡ Words Mode</kbd> active</span>
+      <div class="shortcut-pills">
+        <span class="shortcut-tag"><kbd>Tab</kbd> + <kbd>Enter</kbd> restart</span>
+        <span class="shortcut-tag"><kbd>Alt</kbd> + <kbd>K</kbd> keyboard</span>
+        <span class="shortcut-tag"><kbd>Alt</kbd> + <kbd>V</kbd> voice</span>
+        <span class="shortcut-tag" id="shortcut-mode-hint"><kbd>⚡ Words</kbd> active</span>
+      </div>
+      <button class="btn-shortcuts-help" id="btn-open-shortcuts" title="Keyboard Shortcuts Reference (Ctrl+/)">
+        <kbd>Ctrl</kbd>+<kbd>/</kbd> Shortcuts
+      </button>
     </footer>
   </div>
 
@@ -531,6 +582,46 @@
     </div>
   </div>
 
+  <!-- Keyboard Shortcuts Modal Dialog -->
+  <div class="modal-backdrop" id="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-modal-title">
+    <div class="modal-box shortcuts-modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="shortcuts-modal-title">⌨️ Studio Shortcuts</h3>
+        <button class="action-btn" id="btn-close-shortcuts" aria-label="Close shortcuts dialog">✕</button>
+      </div>
+      <div class="shortcuts-grid">
+        <div class="shortcut-row">
+          <div class="shortcut-keys"><kbd>Tab</kbd> + <kbd>Enter</kbd></div>
+          <div class="shortcut-desc">Restart test instantly</div>
+        </div>
+        <div class="shortcut-row">
+          <div class="shortcut-keys"><kbd>Alt</kbd> + <kbd>K</kbd></div>
+          <div class="shortcut-desc">Toggle virtual keyboard visibility</div>
+        </div>
+        <div class="shortcut-row">
+          <div class="shortcut-keys"><kbd>Alt</kbd> + <kbd>V</kbd></div>
+          <div class="shortcut-desc">Toggle AI voice coach feedback</div>
+        </div>
+        <div class="shortcut-row">
+          <div class="shortcut-keys"><kbd>Alt</kbd> + <kbd>Z</kbd></div>
+          <div class="shortcut-desc">Switch to Zen conveyor flow mode</div>
+        </div>
+        <div class="shortcut-row">
+          <div class="shortcut-keys"><kbd>Shift</kbd> + Click Sound</div>
+          <div class="shortcut-desc">Mute / unmute audio effects</div>
+        </div>
+        <div class="shortcut-row">
+          <div class="shortcut-keys"><kbd>Esc</kbd></div>
+          <div class="shortcut-desc">Close modal / Open settings / Stop Zen infinity</div>
+        </div>
+        <div class="shortcut-row">
+          <div class="shortcut-keys"><kbd>Ctrl</kbd> + <kbd>/</kbd></div>
+          <div class="shortcut-desc">Open this shortcuts cheatsheet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Results & Studio Analytics Modal -->
   <div class="modal-backdrop" id="result-modal" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
     <div class="modal-box result-modal-box">
@@ -682,23 +773,34 @@
     if (drawerBackdrop) drawerBackdrop.addEventListener('click', () => toggleSettingsDrawer(false));
     if (doneSettingsBtn) doneSettingsBtn.addEventListener('click', () => toggleSettingsDrawer(false));
 
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && settingsDrawer && settingsDrawer.classList.contains('open')) {
-        toggleSettingsDrawer(false);
-      }
-    });
+    const shortcutsModal = document.getElementById('shortcuts-modal');
+    const openShortcutsBtn = document.getElementById('btn-open-shortcuts');
+    const closeShortcutsBtn = document.getElementById('btn-close-shortcuts');
 
-    // Keep aria-pressed and the spacer in sync with the hands toggle
-    const handsBtn = document.getElementById('btn-toggle-hands');
-    const handsRoom = document.querySelector('.hands-room');
-    if (handsBtn) {
-      handsBtn.addEventListener('click', () => {
-        const on = !handsBtn.classList.contains('active');
-        handsBtn.classList.toggle('active', on);
-        handsBtn.setAttribute('aria-pressed', String(on));
-        if (handsRoom) handsRoom.classList.toggle('collapsed', !on);
+    function toggleShortcutsModal(open) {
+      if (shortcutsModal) {
+        const isOpen = open !== undefined ? open : !shortcutsModal.classList.contains('open');
+        shortcutsModal.classList.toggle('open', isOpen);
+      }
+    }
+
+    if (openShortcutsBtn) openShortcutsBtn.addEventListener('click', () => toggleShortcutsModal(true));
+    if (closeShortcutsBtn) closeShortcutsBtn.addEventListener('click', () => toggleShortcutsModal(false));
+    if (shortcutsModal) {
+      shortcutsModal.addEventListener('click', (e) => {
+        if (e.target === shortcutsModal) toggleShortcutsModal(false);
       });
     }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (settingsDrawer && settingsDrawer.classList.contains('open')) toggleSettingsDrawer(false);
+        if (shortcutsModal && shortcutsModal.classList.contains('open')) toggleShortcutsModal(false);
+      } else if (((e.ctrlKey || e.metaKey) && (e.key === '/' || e.key === '?' || e.code === 'Slash')) || e.key === 'F1') {
+        e.preventDefault();
+        toggleShortcutsModal();
+      }
+    });
   </script>
 
   <!-- Modular App Logic -->

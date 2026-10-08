@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Vibrant Neon Gradient -->
+    <linearGradient id="neonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+
+    <!-- Keycap Dish Shadow -->
+    <linearGradient id="dishGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#18233c" />
+      <stop offset="100%" stop-color="#0b101e" />
+    </linearGradient>
+  </defs>
+
+  <!-- Base Dark Squircle (High contrast on both light and dark browser tabs) -->
+  <rect x="24" y="24" width="464" height="464" rx="116" fill="#070a14" stroke="#38bdf8" stroke-width="14" stroke-opacity="0.85" />
+
+  <!-- Recessed Keycap Surface -->
+  <rect x="64" y="64" width="384" height="384" rx="84" fill="url(#dishGrad)" stroke="rgba(255, 255, 255, 0.12)" stroke-width="6" />
+
+  <!-- Bold, High-Impact Illuminated 'K' (Readable at 16x16) -->
+  <!-- Vertical Caret Stem -->
+  <rect x="150" y="140" width="56" height="232" rx="28" fill="#ffffff" />
+
+  <!-- Diagonal Upper Arm (Vibrant Cyan-Indigo) -->
+  <path d="M 216 270 
+           L 326 156 
+           A 28 28 0 0 1 366 194 
+           L 262 302 
+           Z" 
+        fill="url(#neonGradient)" />
+
+  <!-- Diagonal Lower Leg -->
+  <path d="M 242 274 
+           L 348 376 
+           A 28 28 0 0 1 310 414 
+           L 196 304 
+           Z" 
+        fill="url(#neonGradient)" />
+
+  <!-- Glowing Tactile Dot (KeyVibe Signature Home Row Bump) -->
+  <circle cx="376" cy="140" r="18" fill="#38bdf8" />
+</svg>
